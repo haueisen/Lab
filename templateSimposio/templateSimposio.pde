@@ -19,32 +19,74 @@ KetaiGesture gesture;
 String ServerAddress = "192.168.1.101";
 
 
+int id;
+float sizeX;
+float sizeY;
+float originX;
+float originY;
+
+boolean sync;
+
+PFont font;
+
 void setup(){
+  sync = true;
+  
   sensor = new KetaiSensor(this);
   sensor.start();
   
   gesture = new KetaiGesture(this);
-
   
   //size(displayWidth,displayHeight);
-  orientation(LANDSCAPE);  
-
-  oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
-
+  orientation(PORTRAIT);   
+  
+  
+  id = 0;
+  sizeX = displayWidth;
+  sizeY = displayHeight;
+  originX = 0;
+  originY = 0;
 }
 
 void draw(){
-background(200);
+  if(sync){
+    //protocolo para numerar os celulares
+    
+    //botao no meio da tela para conectar
+    ellipseMode(CENTER);
+    stroke(0);
+    strokeWeight(3);
+    fill(255);
+    if(sizeX < sizeY){
+    ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
+    }else{
+    ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
+    }
+    font = createFont("Arial", 72);
+    textFont(font);
+    textAlign(CENTER, CENTER);
+    fill(0);
+    text(id, sizeX/2, sizeY/2);
+    // ao clicar faz a conexao e o  servidor devolve o id
+    // o id é atribuido sequencialmente
+    //oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
+    
+  }else{
+  background(200);
+  
+  }
 }
 
 //eventos
 //acelerometro
 void onAccelerometerEvent(float x, float y, float z)
 {
+  if(oscP5tcpClient != null){
   oscP5tcpClient.send("/accel",new Object[]{new Float(x),new Float(y),new Float(z)});
+  }
 }
-//gestos
 
+//gestos
 void onDoubleTap(float x, float y)
 {
   oscP5tcpClient.send("/dtap",new Object[]{new Float(x),new Float(y)});
@@ -75,6 +117,11 @@ void onPinch(float x, float y, float d)
 void onRotate(float x, float y, float ang)
 {
   oscP5tcpClient.send("/rotate",new Object[]{new Float(x),new Float(y),new Float(ang)});
+}
+
+//pointer local
+void mousePresed(){
+  //c
 }
 
 //osc handler
