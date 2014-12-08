@@ -24,7 +24,7 @@ float sizeX;
 float sizeY;
 float originX;
 float originY;
-
+boolean portrait = true;;
 boolean sync;
 
 PFont font;
@@ -32,14 +32,14 @@ PFont font;
 void setup(){
   sync = true;
   
-  sensor = new KetaiSensor(this);
-  sensor.start();
-  
+  sensor = new KetaiSensor(this);   
   gesture = new KetaiGesture(this);
   
   //size(displayWidth,displayHeight);
-  orientation(PORTRAIT);   
-  
+  if(portrait)
+    orientation(PORTRAIT);   
+  else
+    orientation(LANDSCAPE);   
   
   id = 0;
   sizeX = displayWidth;
@@ -58,19 +58,58 @@ void draw(){
     strokeWeight(3);
     fill(255);
     if(sizeX < sizeY){
-    ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
+      ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
     }else{
-    ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
+      ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
     }
     font = createFont("Arial", 72);
     textFont(font);
     textAlign(CENTER, CENTER);
     fill(0);
     text(id, sizeX/2, sizeY/2);
+    
+    //botoes pra alterar id
+      //+
+    ellipseMode(CENTER);
+    stroke(0);
+    strokeWeight(3);
+    fill(255);
+    font = createFont("Arial", 72);
+    textFont(font);
+    textAlign(CENTER, CENTER);
+    if(sizeX < sizeY){
+      ellipse(sizeX*0.8, sizeX*0.2, sizeX*0.1, sizeX*0.1);
+      fill(0);
+      text("+", sizeX*0.8, sizeX*0.195);
+    }else{
+      ellipse(sizeY*0.8, sizeY*0.2, sizeY*0.1, sizeY*0.1);
+      fill(0);
+      text("+", sizeY*0.8, sizeY*0.195);
+    }
+      //-
+    ellipseMode(CENTER);
+    stroke(0);
+    strokeWeight(3);
+    fill(255);
+    font = createFont("Arial", 72);
+    textFont(font);
+    textAlign(CENTER, CENTER);
+    if(sizeX < sizeY){
+      ellipse(sizeX*0.2, sizeX*0.2, sizeX*0.1, sizeX*0.1);
+      fill(0);
+      text("-", sizeX*0.2, sizeX*0.195);
+    }else{
+      ellipse(sizeY*0.2, sizeY*0.2, sizeY*0.1, sizeY*0.1);
+      fill(0);
+      text("-", sizeY*0.2, sizeY*0.195);
+    }
+    
+    
     // ao clicar faz a conexao e o  servidor devolve o id
     // o id é atribuido sequencialmente
     //oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
-    
+    //se sync acabou
+    //sensor.start();
   }else{
   background(200);
   
@@ -120,8 +159,64 @@ void onRotate(float x, float y, float ang)
 }
 
 //pointer local
-void mousePresed(){
-  //c
+void mousePressed(){
+  //
+  if(sync){
+    if(sizeX < sizeY){
+        //-
+        if((mouseX > (sizeX*0.2 - sizeX*0.1))&&
+          (mouseX < (sizeX*0.2 + sizeX*0.1))&&
+          (mouseY > (sizeX*0.2 - sizeX*0.1))&&
+          (mouseY < (sizeX*0.2 + sizeX*0.1))){
+        
+          if(id > 0) id--;
+        //+  
+        }else if((mouseX > (sizeX*0.8 - sizeX*0.1))&&
+                 (mouseX < (sizeX*0.8 + sizeX*0.1))&&
+                 (mouseY > (sizeX*0.2 - sizeX*0.1))&&
+                 (mouseY < (sizeX*0.2 + sizeX*0.1))){
+            
+          if(id < 250) id++;
+        //osc  
+        }else if((mouseX > (sizeX/2 - sizeX*0.8))&&
+                 (mouseX < (sizeX/2 + sizeX*0.8))&&
+                 (mouseY > (sizeY/2 - sizeX*0.8))&&
+                 (mouseY < (sizeY/2 + sizeX*0.8))){
+          
+                 
+          oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);         
+          delay(1);
+          oscP5tcpClient.send("/start", new Object[]{new Integer(id),new Float(sizeX),new Float(sizeY),
+                                                      new Float(originX),new Float(originY), new Boolean(portrait)});
+          
+        }      
+      }else{
+        //-
+        if((mouseX > (sizeY*0.2 - sizeY*0.1))&&
+          (mouseX < (sizeY*0.2 + sizeY*0.1))&&
+          (mouseY > (sizeY*0.2 - sizeY*0.1))&&
+          (mouseY < (sizeY*0.2 + sizeY*0.1))){
+        
+          if(id > 0) id--;
+        //+  
+        }else if((mouseX > (sizeY*0.8 - sizeY*0.1))&&
+                 (mouseX < (sizeY*0.8 + sizeY*0.1))&&
+                 (mouseY > (sizeY*0.2 - sizeY*0.1))&&
+                 (mouseY < (sizeY*0.2 + sizeY*0.1))){
+            
+          if(id < 250) id++;
+        //osc  
+        }else if((mouseX > (sizeX/2 - sizeY*0.8))&&
+                 (mouseX < (sizeX/2 - sizeY*0.8))&&
+                 (mouseY > (sizeY/2 - sizeY*0.8))&&
+                 (mouseY < (sizeY/2 - sizeY*0.8))){
+                   
+          oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
+          oscP5tcpClient.send("/start", new Object[]{new Integer(id),new Float(sizeX),new Float(sizeY),
+                                                      new Float(originX),new Float(originY), new Boolean(portrait)});
+        }
+      }
+  }
 }
 
 //osc handler
@@ -149,6 +244,13 @@ void oscEvent(OscMessage theMessage) {
   else if(theMessage.checkAddrPattern("/rotate")) {    
     
   }
+  else if(theMessage.checkAddrPattern("/start")) {    
+    //msg recebida do servidor, indicando que está conectado
+    println("connected");
+    sync = false;
+    sensor.start();
+  }
+
 }
 
 //surface

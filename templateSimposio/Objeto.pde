@@ -12,5 +12,14 @@ public abstract class Objeto{
     this.y = y;
     this.rot = r;    
     
-  }   
+  } 
+
+  public void processa(){
+    //processamento do objeto
+  }  
+  
+  
+  public void desenha(){
+    //desenha objeto na tela  
+  }
 }
