@@ -1,43 +1,26 @@
-import netP5.*;
-
-TcpClient myClient; 
-int dataIn;
-JSONObject json;
-
 JSONTCPClient _client;
  
 void setup() { 
   size(200, 200);
   
-  _client = new JSONTCPClient("127.0.0.1", 8765);
-  
-  
-  println("client: " + _client.toString());
-  
-  // Connect to the local machine at port 5204.
-  // This example will not run if you haven't
-  // previously started a server on this port.
-  //myClient = new TcpClient(this, "127.0.0.1", 8765);
- //json = new JSONObject();
- //json.setInt("id", 0);
-  //json.setString("species", "Panthera leo");
-  //json.setString("name", "Lion");
-  //println("start");
+  _client = new JSONTCPClient("192.168.0.200", 8765);
 } 
  
 void draw() { 
-  //if (mousePressed) {
-   // myClient.send(json.toString());
-  //}
+  if(_client.numMessages() > 0){
+    JSONObject j = _client.getNextMessage();
+    processMessage(j);
+  }
 }
 
-void onMessage() {
-  println("onMessage");
+void mousePressed(){
+  JSONObject j = new JSONObject();
+  j.setString("Teste","Alguém ai?");
+  _client.sendJSON(j);
 }
 
-void netEvent(NetMessage theMessage) {
-  //JSONObject myjson = JSONObject.parse(theMessage.getString());
-  //println(myjson.toString());
-}
+void processMessage(JSONObject message){
 
+  print(message);
+}
 
