@@ -1,7 +1,5 @@
+import java.util.*;
 import android.view.MotionEvent;
-
-import oscP5.*;
-import netP5.*;
 
 import ketai.camera.*;
 import ketai.net.*;
@@ -11,23 +9,30 @@ import ketai.data.*;
 
 import apwidgets.*;
 
+JSONTCPClient _client;
 
-OscP5 oscP5tcpClient;
 KetaiSensor sensor;
 KetaiGesture gesture;
-  
-String ServerAddress = "192.168.1.101";
-
 
 int id;
 float sizeX;
 float sizeY;
 float originX;
 float originY;
-boolean portrait = true;;
+boolean portrait = false;
 boolean sync;
 
 PFont font;
+
+ArrayList<Objeto> objetos;
+ArrayList<Objeto> replicados;
+ArrayList<Objeto> esperandoID;
+
+int nextId;
+
+Vagalume vagalume;
+
+float accelX;
 
 void setup(){
   sync = true;
@@ -44,11 +49,20 @@ void setup(){
   id = 0;
   sizeX = displayWidth;
   sizeY = displayHeight;
+  //println(sizeX);
+  //println(sizeY);
   originX = 0;
   originY = 0;
+  
+  objetos = new ArrayList<Objeto>();
+  replicados = new ArrayList<Objeto>();
+  esperandoID = new ArrayList<Objeto>();
+  nextId = 0;  
+  
 }
 
 void draw(){
+ // print(sync);
   if(sync){
     //protocolo para numerar os celulares
     
@@ -60,7 +74,7 @@ void draw(){
     if(sizeX < sizeY){
       ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
     }else{
-      ellipse(sizeX/2, sizeY/2, sizeX*0.8, sizeX*0.8);
+      ellipse(sizeX/2, sizeY/2, sizeY*0.8, sizeY*0.8);
     }
     font = createFont("Arial", 72);
     textFont(font);
@@ -82,9 +96,9 @@ void draw(){
       fill(0);
       text("+", sizeX*0.8, sizeX*0.195);
     }else{
-      ellipse(sizeY*0.8, sizeY*0.2, sizeY*0.1, sizeY*0.1);
+      ellipse(sizeX*0.8, sizeY*0.2, sizeY*0.1, sizeY*0.1);
       fill(0);
-      text("+", sizeY*0.8, sizeY*0.195);
+      text("+", sizeX*0.8, sizeY*0.195);
     }
       //-
     ellipseMode(CENTER);
@@ -104,15 +118,82 @@ void draw(){
       text("-", sizeY*0.2, sizeY*0.195);
     }
     
-    
-    // ao clicar faz a conexao e o  servidor devolve o id
-    // o id é atribuido sequencialmente
-    //oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
-    //se sync acabou
-    //sensor.start();
   }else{
-  background(200);
+    background(200);    
   
+    while(_client.numMessages() > 0){
+      //print(_client.numMessages());
+      JSONObject j = _client.getNextMessage();
+      processMessage(j);
+    }
+    ArrayList<Integer> remove = new ArrayList<Integer>();//AQUI bug multiplicacao
+    for(Objeto o : objetos){
+      o.processa();
+      //se objeto perto da borda replica em outro dispositvo
+      if((o.x + o.radius) >= sizeX){
+        if(o.replicado == false){
+          o.replicado = true;
+          if(o.obj == "Circulo"){
+            replicados.add(new Circulo(o.id,o.x - sizeX,o.y,o.radius));
+          }else if(o.obj == "Vagalume"){
+            replicados.add(new Vagalume(o.id,o.x - sizeX,o.y,o.vx,o.vy,o.radius));
+          }         
+        } 
+      }else if((o.x - o.radius) <= 0){
+        if(o.replicado == false){
+          o.replicado = true;
+          if(o.obj == "Circulo"){
+            replicados.add(new Circulo(o.id,o.x + sizeX,o.y,o.radius));
+          }else if(o.obj == "Vagalume"){
+            replicados.add(new Vagalume(o.id,o.x + sizeX,o.y,o.vx,o.vy,o.radius));
+          }         
+        } 
+      }
+      if(((o.x - o.radius) >= sizeX)||((o.x + o.radius) <= 0)){
+        remove.add(0,objetos.indexOf(o));
+      }else{      
+        o.desenha();
+      }
+    }
+    for(Integer i : remove){
+      objetos.remove(i);
+    }
+    remove.clear();
+    for(Objeto r : replicados){
+      if(_client.isConnected()){
+        JSONObject j = new JSONObject();
+        j.setString("ac","objeto");
+        if(r.obj == "Circulo"){
+          j.setString("Objeto","Circulo");
+          if(r.x < sizeX/2){
+            j.setInt("para",(id - 1) % 2);
+          }else{
+            j.setInt("para",(id + 1) % 2);
+          }
+          j.setInt("ID",r.id);
+          j.setFloat("x",r.x);
+          j.setFloat("y",r.y);
+          j.setFloat("raio",r.radius);
+        }else if(r.obj == "Vagalume"){
+          j.setString("Objeto","Vagalume");
+          if(r.x < sizeX/2){
+            j.setInt("para",(id - 1) % 2);
+          }else{
+            j.setInt("para",(id + 1) % 2);
+          }
+          j.setInt("ID",r.id);
+          j.setFloat("x",r.x);          
+          j.setFloat("y",r.y);
+          j.setFloat("vx",r.vx);
+          j.setFloat("vy",r.vy);
+          j.setFloat("raio",r.radius);
+        }
+        _client.sendJSON(j);
+      }
+    }
+    replicados.clear();
+    vagalume.processa();
+    vagalume.desenha();    
   }
 }
 
@@ -120,42 +201,42 @@ void draw(){
 //acelerometro
 void onAccelerometerEvent(float x, float y, float z)
 {
-  if(oscP5tcpClient != null){
-  oscP5tcpClient.send("/accel",new Object[]{new Float(x),new Float(y),new Float(z)});
-  }
+  accelX = x;
 }
 
 //gestos
-void onDoubleTap(float x, float y)
-{
-  oscP5tcpClient.send("/dtap",new Object[]{new Float(x),new Float(y)});
-}
-
 void onTap(float x, float y)
-{
-  oscP5tcpClient.send("/tap",new Object[]{new Float(x),new Float(y)});
-}
-
-void onLongPress(float x, float y)
-{
-  oscP5tcpClient.send("/lpress",new Object[]{new Float(x),new Float(y)});
+{ 
+  
 }
 
 //the coordinates of the start of the gesture, 
 //     end of gesture and velocity in pixels/sec
 void onFlick( float x, float y, float px, float py, float v)
-{
-  oscP5tcpClient.send("/flick",new Object[]{new Float(x),new Float(y),new Float(px),new Float(py),new Float(v)});
+{ 
+  
 }
 
-void onPinch(float x, float y, float d)
-{
-  oscP5tcpClient.send("/pinch",new Object[]{new Float(x),new Float(y),new Float(d)});
-}
 
-void onRotate(float x, float y, float ang)
-{
-  oscP5tcpClient.send("/rotate",new Object[]{new Float(x),new Float(y),new Float(ang)});
+void connect(){
+  _client = new JSONTCPClient("192.168.0.104", 8765);       
+            
+  if(_client.isConnected()){
+    print("connected");
+    JSONObject j = new JSONObject();
+    j.setString("ac","hi");
+    j.setInt("numero",id);
+    _client.sendJSON(j);
+    sync = false;
+    sensor.start();
+    
+    vagalume = new Vagalume(nextId,40);
+    nextId++;
+    objetos.add(vagalume);
+    
+  }else{
+    print("not connected");
+  }
 }
 
 //pointer local
@@ -176,19 +257,14 @@ void mousePressed(){
                  (mouseY > (sizeX*0.2 - sizeX*0.1))&&
                  (mouseY < (sizeX*0.2 + sizeX*0.1))){
             
-          if(id < 250) id++;
-        //osc  
+          if(id < 3) id++;
+        //rede  
         }else if((mouseX > (sizeX/2 - sizeX*0.8))&&
                  (mouseX < (sizeX/2 + sizeX*0.8))&&
                  (mouseY > (sizeY/2 - sizeX*0.8))&&
                  (mouseY < (sizeY/2 + sizeX*0.8))){
-          
-                 
-          oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);         
-          delay(1);
-          oscP5tcpClient.send("/start", new Object[]{new Integer(id),new Float(sizeX),new Float(sizeY),
-                                                      new Float(originX),new Float(originY), new Boolean(portrait)});
-          
+          connect();      
+
         }      
       }else{
         //-
@@ -199,58 +275,65 @@ void mousePressed(){
         
           if(id > 0) id--;
         //+  
-        }else if((mouseX > (sizeY*0.8 - sizeY*0.1))&&
-                 (mouseX < (sizeY*0.8 + sizeY*0.1))&&
+        }else if((mouseX > (sizeX*0.8 - sizeY*0.1))&&
+                 (mouseX < (sizeX*0.8 + sizeY*0.1))&&
                  (mouseY > (sizeY*0.2 - sizeY*0.1))&&
                  (mouseY < (sizeY*0.2 + sizeY*0.1))){
             
-          if(id < 250) id++;
-        //osc  
+          if(id < 3) id++;
+        //rede 
         }else if((mouseX > (sizeX/2 - sizeY*0.8))&&
-                 (mouseX < (sizeX/2 - sizeY*0.8))&&
+                 (mouseX < (sizeX/2 + sizeY*0.8))&&
                  (mouseY > (sizeY/2 - sizeY*0.8))&&
-                 (mouseY < (sizeY/2 - sizeY*0.8))){
-                   
-          oscP5tcpClient = new OscP5(this, ServerAddress, 11000, OscP5.TCP);
-          oscP5tcpClient.send("/start", new Object[]{new Integer(id),new Float(sizeX),new Float(sizeY),
-                                                      new Float(originX),new Float(originY), new Boolean(portrait)});
+                 (mouseY < (sizeY/2 + sizeY*0.8))){
+          
+         connect();
         }
       }
+  }else{
+    
+    objetos.add(new Circulo(nextId,mouseX,mouseY,25));
+    nextId++;
+    /*
+    esperandoID.add(new Circulo(0,mouseX,mouseY,25));    
+    JSONObject j = new JSONObject();
+    j.setString("ac","newid");    
+    _client.sendJSON(j);
+    println("requested id");
+    */
   }
 }
 
-//osc handler
-void oscEvent(OscMessage theMessage) {
+//json handler
+void processMessage(JSONObject msg){
   
- // System.out.println("### got a message " + theMessage);
-  if(theMessage.checkAddrPattern("/accel")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/dtap")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/tap")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/lpress")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/flick")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/pinch")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/rotate")) {    
-    
-  }
-  else if(theMessage.checkAddrPattern("/start")) {    
-    //msg recebida do servidor, indicando que está conectado
-    println("connected");
-    sync = false;
-    sensor.start();
-  }
-
+  //println(msg);
+  String ac = msg.getString("ac");
+  if(ac.equals("objeto")){
+    String objeto = msg.getString("Objeto");
+    if(objeto.equals("Circulo")){
+      int id = msg.getInt("ID");
+      float x = msg.getFloat("x");
+      float y = msg.getFloat("y");
+      float r = msg.getFloat("raio");
+      objetos.add(new Circulo(id,x,y,r));
+    }else if(objeto.equals("Vagalume")){
+      int id = msg.getInt("ID");
+      float x = msg.getFloat("x");
+      float y = msg.getFloat("y");
+      float vx = msg.getFloat("vx");
+      float vy = msg.getFloat("vy");
+      float r = msg.getFloat("raio");
+      objetos.add(new Vagalume(id,x,y,vx,vy,r));
+    }
+  }else if(ac.equals("objid")){
+    if(esperandoID.size() > 0){
+      Objeto o = esperandoID.get(0);
+      o.id = msg.getInt("numero");      
+      objetos.add(o);
+      esperandoID.remove(0);      
+    }
+  } 
 }
 
 //surface
@@ -261,4 +344,11 @@ public boolean surfaceTouchEvent(MotionEvent event) {
 
   //forward event to class for processing
   return gesture.surfaceTouchEvent(event);
+}
+
+//fecha app qdo qlqr dos botoes (home, back, multitask) eh apertado
+@Override
+void onPause(){
+  super.onPause();
+  this.finish();
 }
