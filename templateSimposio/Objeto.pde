@@ -8,6 +8,7 @@ public abstract class Objeto{
   float rot; // in degrees 
   float radius; //circle boundary 
   boolean replicado;
+  boolean recebido;
   
   String obj;
   
@@ -18,6 +19,7 @@ public abstract class Objeto{
     this.y = y;
     this.rot = r;    
     replicado = false;
+    recebido = false;
   } 
 
   public void processa(){

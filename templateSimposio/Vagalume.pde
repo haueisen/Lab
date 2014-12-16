@@ -1,9 +1,12 @@
 public class Vagalume extends Objeto{
   
   float ax, ay;
+  color ligad = color(0,255,0);
+  color desligado = color(0,0,0);
+  boolean ligado = false;
   
   public Vagalume(int id, float r){
-     super(id,random(0,sizeX),random(0,sizeY),0);
+     super(id,random(sizeX*0.1,sizeX*0.9),random(sizeY*0.1,sizeY*0.9),0);
      this.radius = r;
      
      vx = random(-3,3);
@@ -25,7 +28,7 @@ public class Vagalume extends Objeto{
   public void processa(){
     //processamento do objeto
     
-    if((x > sizeX*0.95) || (x < sizeX*0.05)){
+    if((y > sizeY*0.95) || (y < sizeY*0.05)){
       x = x + vx;
       y = y + vy;
     }else{    
@@ -57,7 +60,7 @@ public class Vagalume extends Objeto{
   }
   
   void atrator() {  
-    atrator(map(accelX,-5,5,0,sizeX), random(0,sizeY));
+    atrator(random(0,sizeX),map(accelY,-4,4,0,sizeY));
   }
   
   
@@ -68,8 +71,14 @@ public class Vagalume extends Objeto{
     pushMatrix();
     resetMatrix();
     translate(x,y);
-    fill(0,0,0);
-    ellipse(0, 0, 20,20);       
+    
+    stroke(0);
+    if(ligado){
+      fill(ligad);
+    }else{
+      fill(desligado);
+    }
+    ellipse(0, 0, 20,20); 
     fill(255,255,255);
     rotate(random(-0.5,0.5));
     ellipse(12,0, 8,8);
