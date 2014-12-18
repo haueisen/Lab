@@ -1,12 +1,13 @@
 //Oficina Adultos
 
 import apwidgets.*;
-//APMediaplayer [] players;
 APMediaPlayer player;
 APMediaPlayer playerTrilhas;
 
-int instalacaoAtual = 0;
-int _tabletId = 0;
+//servidor
+JSONTCPClient _client;
+boolean conectado = false;
+int _tabletId = 1;
 
 //controle remoto
 //id tablet sendo alterado
@@ -23,6 +24,8 @@ float x_rotacao = 0.0;
 float y_rotacao = 0.0;
 //grau do zoom 
 float rescale = 1.0;
+//instalacao atual
+int instalacaoAtual = 0;
 
 //Rogério
 String [] Rog_sujeito;
@@ -73,6 +76,7 @@ boolean Pabl_paraCima = true;
 
 void setup(){
   size(1280, 800);
+  _client = new JSONTCPClient("192.168.0.122", 8765);
   //size(displayWidth, displayHeight);  
   background(255);
   frameRate(100);
@@ -81,21 +85,32 @@ void setup(){
   player.setVolume(1.0, 1.0);
   playerTrilhas.setVolume(0.1, 0.1);
   playerTrilhas.setLooping(true);
+  playerTrilhas.setMediaFile("Rogerio.mp3");
+  playerTrilhas.start(); 
   //carrega conteúdos
   conteudoRogerio();  
   conteudoAlvaro();
   conteudoCarlos();  
   conteudoAlckmar();    
-  conteudoPablo();
-  playerTrilhas.setMediaFile("Rogerio.mp3");
-  playerTrilhas.start(); 
+  conteudoPablo();  
 }
 
 void draw(){
-  //inicialização da parte do servidor
-  //manda "hi" pra ele com id
-  //supondo ids inteiros de 0-3
-  // temporizador ou voz acima de threshold troca conteúdo
+  //servidor
+  if(!conectado){
+    if(_client.isConnected()){
+      conectado = true;
+      JSONObject hi = new JSONObject();
+      hi.setString("ac","hi");
+      hi.setInt("numero",_tabletId);
+      _client.sendJSON(hi);     
+    }
+  }  
+  //controle remoto
+  if(_client.numMessages() > 0){
+    JSONObject j = _client.getNextMessage();
+    processMessage(j);
+  }  
   switch(instalacaoAtual){
     case 0://rogerio     
       playRogerio();
@@ -417,13 +432,13 @@ void mousePressed(){
         Carl_estados[_tabletId] = 0;      
       break;
     case 3://alckmar
-      println(mouseX+" "+mouseY);
+      //println(mouseX+" "+mouseY);
       if(Alck_estados[_tabletId] == 0 && mouseY > 685 && mouseY < 720){
         if(_tabletId != 3){
           player.setMediaFile(Alck_audios[_tabletId*2+Alck_estados[_tabletId]]);
           player.start();
-          println("cur"+player.getCurrentPosition());
-          println("dur"+player.getDuration());
+          ///println("cur"+player.getCurrentPosition());
+          //println("dur"+player.getDuration());
           if(player.getCurrentPosition() >= player.getDuration())
               Alck_estados[_tabletId] = 1;
         }
@@ -469,7 +484,7 @@ void mousePressed(){
       }
   }  
 }
-
+/*
 void keyPressed(){
   if(key == '0'){    
     clear();
@@ -498,7 +513,7 @@ void keyPressed(){
   }
   if(key == ENTER){
     instalacaoAtual += 1;
-    if(instalacaoAtual > 5) instalacaoAtual = 0;
+    if(instalacaoAtual > 4) instalacaoAtual = 0;
     clear();
     background(255);
     if(instalacaoAtual == 2) playerTrilhas.setMediaFile("Carlos.mp3");
@@ -511,7 +526,7 @@ void keyPressed(){
   if(key == 'r'){
     vel -= 1;
   }
-}
+}*/
 
 void playRogerio(){    
   //println("rog "+Rog_local);
@@ -684,8 +699,8 @@ void playAlvaro(){
   //println("2"+Alv_poema[2]);
   //println("3"+Alv_poema[3]);
   //println("4"+Alv_poema[4]);
-  println("pos "+int(width/2+Alv_shift+Alv_nasc));  
-  println("sh "+Alv_shift);
+  //println("pos "+int(width/2+Alv_shift+Alv_nasc));  
+  //println("sh "+Alv_shift);
   if(Alv_shift < -1280-Alv_nasc){
     Alv_shift = 0;
     Alv_nasc = +1000;
@@ -1022,5 +1037,48 @@ public void onDestroy() {
   }
   if(playerTrilhas!=null) { //must be checked because or else crash when return from landscape mode
     playerTrilhas.release(); //release the player
+  }
+}
+
+//servidor: controle remoto
+void processMessage(JSONObject message){
+  println("|"+message.getString("ac")+"|");
+  String msg = message.getString("ac");
+  if(msg.equals("bang") == true){
+      instalacaoAtual+=1;
+      if(instalacaoAtual > 4) instalacaoAtual = 0;
+      clear();
+      background(255);
+      if(instalacaoAtual == 0){
+        player.pause();
+        playerTrilhas.setMediaFile("Rogerio.mp3");
+      }
+      if(instalacaoAtual == 1){
+        player.pause();
+        Alv_shift = 0.0;
+        Alv_velocidade = 1.0;
+        Alv_direcaoDirParaEsq = true; 
+        Alv_tocaCapina = false;
+        Alv_nasc = 0.0;
+      }
+      if(instalacaoAtual == 2){
+        player.pause();
+        playerTrilhas.setMediaFile("Carlos.mp3");
+      }
+      if(instalacaoAtual == 3){
+        player.pause();
+        playerTrilhas.setMediaFile("Alckmar.mp3");
+      }
+      if(instalacaoAtual == 4){
+        player.pause();
+        playerTrilhas.setMediaFile("Pablo_Gobira.mp3");
+        playerTrilhas.start();
+      }
+  }  
+  if(msg.equals("speed") == true){
+    vel = message.getInt("nivel")/10;
+  }
+  if(msg.equals("color") == true){
+    cor = color(random(0,255),random(0,255),random(0,255));
   }
 }
