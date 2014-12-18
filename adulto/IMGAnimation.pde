@@ -102,7 +102,31 @@ public class IMGAnimation {
       return (loadImage(this._frames[this._current]));
     }
   }
-  
+  public PImage getFrame(int cor) {
+    if (this._numFrames == 0) {
+      return (null);
+    } else if (!this.autoPlay) {
+      return (loadImage(this._frames[this._current]));
+    } else if (!this.loopAnim && (this._current >= (this._numFrames -1))) {
+      this._current = this._numFrames - 1;
+      return (loadImage(this._frames[this._current]));
+    } else {
+      this._counter++;
+      if (this._counter >= this._delay) {
+        this._counter = 0;
+        this._current++;
+        if (this._current >= this._numFrames) {
+          if (this.loopAnim) {
+            this._current = 0;
+          } else {
+            this._current = this._numFrames - 1;
+          }
+        }
+      }
+      background(cor);
+      return (loadImage(this._frames[this._current]));
+    }
+  }
   public boolean nextFrame() {
     if (this._numFrames > 0) {
       this._current++;

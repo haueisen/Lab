@@ -1,9 +1,9 @@
 //Oficina Adultos
 
 import apwidgets.*;
-APMediaPlayer player;
+//APMediaplayer player;
 
-int instalacaoAtual = 0;
+int instalacaoAtual = 4;
 int _tabletId = 0;
 
 //controle remoto
@@ -38,52 +38,35 @@ String Rog_save;
 String [] Alv_poema;
 IMGAnimation Alv_gif_capina;
 //Gif Alv_gif_capina;
-String [] Alv_audios;
+//String [] Alv_audios;
 float Alv_shift = 0.0;
 float Alv_velocidade = 1.0;
-boolean Alv_direcaoDirParaEsq = false; //direita para esquerda - 
+boolean Alv_direcaoDirParaEsq = true; 
+boolean Alv_tocaCapina = false;
 
 //Carlos Augusto
-PImage Carl_tablet1_estado1;//?
-PImage Carl_tablet1_estado2;//onde
-PImage Carl_tablet1_estado3;//onde se lê
-PImage Carl_tablet1_estado4;//P
-PImage Carl_tablet2_estado1;//:
-PImage Carl_tablet2_estado2;//se lê
-PImage Carl_tablet2_estado3;//onde se lê:
-PImage Carl_tablet2_estado4;//O
-PImage Carl_tablet3_estado1;//!
-PImage Carl_tablet3_estado2;//tudo
-PImage Carl_tablet3_estado3;//onde se lê!
-PImage Carl_tablet3_estado4;//E
-PImage Carl_tablet4_estado1;//...
-PImage Carl_tablet4_estado2;//nada
-PImage Carl_tablet4_estado3;//onde se lê...
-PImage Carl_tablet4_estado4;//M
+int [] Carl_estados;
+PImage [] Carl_imgs;
 String [] Carl_audios;
 
 //Alckmar
-PImage Alck_poema1A;
-PImage Alck_poema1B;
-PImage Alck_palavra1;
-PImage Alck_poema2A;
-PImage Alck_poema2B;
-PImage Alck_palavra2;
-PImage Alck_poema3A;
-PImage Alck_poema3B;
-PImage Alck_palavra3;
+PImage [] Alck_imgs;
+PImage [] Alck_palavra;
+int [] Alck_estados;
 String [] Alck_audios;
 
 //Pablo
 String [] Pabl_versos;
+int [] Pabl_ordem;
+float apagar = 255;
 
 void setup(){
   size(1280, 800);
   //size(displayWidth, displayHeight);  
   background(255);
   frameRate(100);
-  player = new APMediaPlayer(this); //create new APMediaPlayer
-  player.setVolume(1.0, 1.0);
+  ////player = new APMedia//player(this); //create new APMedia//player
+  ////player.setVolume(1.0, 1.0);
   //carrega conteúdos
   conteudoRogerio();  
   conteudoAlvaro();
@@ -120,7 +103,6 @@ void draw(){
 void mousePressed(){
   switch(instalacaoAtual){
     case 0://rogerio    
-      println(mouseX+" "+mouseY);
       if(mouseX >250 && mouseX < 400 && mouseY > 210 && mouseY < 250){
         Rog_local = 1;
         Rog_save = Rog_sujeito[_tabletId*4];
@@ -336,86 +318,92 @@ void mousePressed(){
         
         String Rog_audio = "rog"+Rog_local+Rog_save+".mp3";
         if(Rog_audios.hasValue(Rog_audio)){
-          player.setMediaFile(Rog_audio);
-          player.start();
+          //player.setMediaFile(Rog_audio);
+          //player.start();
         }
       }
       if(Rog_local == 0){
-        player.setMediaFile("rogque1.mp3");
-        player.start();
+        //player.setMediaFile("rogque1.mp3");
+        //player.start();
       }
      
       break;
     case 1://alvaro
-      switch(_tabletId){
-        case 0:
-          if(Alv_poema[0] == "um"){
-            Alv_poema[0] = "outro";
-            Alv_poema[4] = "um";
+      //println("inst"+instalacaoAtual+"id"+_tabletId);
+      //for(int i=0; i<5; i++) println(i+" '"+Alv_poema[i]+"'"); 
+      if(Alv_poema[_tabletId] == "um"){
+        for(int i=0; i<5;i++){
+          if(Alv_poema[i] == "outro"){
+            Alv_poema[_tabletId] = "outro";
+            Alv_poema[i] = "um";
+            break;
           }
-          if(Alv_poema[0] == "corta"){
-            Alv_poema[0] = "renova";
-            Alv_poema[2] = "corta";
+        }
+        //player.setMediaFile("alv1um.mp3");
+        //player.start();   
+      }
+      else{
+        if(Alv_poema[_tabletId] == "corta"){
+          for(int i=0; i<5;i++){
+            if(Alv_poema[i] == "renova"){
+              Alv_poema[_tabletId] = "renova";
+              Alv_poema[i] = "corta";
+              break;
+            }
           }
-          if(Alv_poema[0] == "capina"){
-            
+          //player.setMediaFile("alv2corta.mp3");
+          //player.start();   
+        }
+        else{
+          if(Alv_poema[_tabletId] == "capina"){
+            Alv_tocaCapina = true;  
+            //player.setMediaFile("alv3capina.mp3");
+            //player.start();          
           }
-          if(Alv_poema[0] == "renova"){
-            Alv_poema[0] = "corta";
-            Alv_poema[3] = "renova";
+          else{              
+            if(Alv_poema[_tabletId] == "renova"){
+              for(int i=0; i<5;i++){
+                if(Alv_poema[i] == "corta"){
+                  Alv_poema[_tabletId] = "corta";
+                  Alv_poema[i] = "renova";
+                  break;
+                }
+              }
+              //player.setMediaFile("alv4renova.mp3");
+              //player.start();   
+            }
+            else{
+              if(Alv_poema[_tabletId] == "outro"){
+                for(int i=0; i<5;i++){
+                  if(Alv_poema[i] == "um"){
+                    Alv_poema[_tabletId] = "um";
+                    Alv_poema[i] = "outro";
+                    break;
+                  }
+                }
+                //player.setMediaFile("alv5outro.mp3");
+                //player.start();   
+              }
+            }
           }
-          if(Alv_poema[0] == "outro"){
-            Alv_poema[0] = "um";
-            Alv_poema[1] = "outro";
-          }
-          break;
-        case 1:
-          if(Alv_poema[1] == "um"){
-            Alv_poema[1] = "outro";
-            Alv_poema[3] = "um";
-          }
-          if(Alv_poema[1] == "corta"){
-            Alv_poema[1] = "renova";
-            Alv_poema[3] = "corta";
-          }
-          if(Alv_poema[1] == "capina"){            
-          }
-          if(Alv_poema[1] == "outro"){
-            Alv_poema[1] = "um";
-            Alv_poema[3] = "outro";
-          }          
-          if(Alv_poema[1] == "renova"){
-            Alv_poema[1] = "corta";
-            Alv_poema[3] = "renova";
-          }
-          break;
-        case 2:
-          if(Alv_poema[2] == "um"){
-            Alv_poema[2] = "outro";
-            Alv_poema[] = "um";
-          }
-          if(Alv_poema[1] == "corta"){
-            Alv_poema[1] = "renova";
-            Alv_poema[4] = "corta";
-          }
-          if(Alv_poema[1] == "capina"){            
-          }
-          if(Alv_poema[1] == "outro"){
-            Alv_poema[1] = "um";
-            Alv_poema[4] = "outro";
-          }          
-          if(Alv_poema[1] == "renova"){
-            Alv_poema[1] = "corta";
-            Alv_poema[4] = "renova";
-          }
-          break;
+        }
       }
       break;
     case 2://carlos
- 
+      //player.setMediaFile(Carl_audios[_tabletId*4+Carl_estados[_tabletId]]);
+      //player.start();
+      Carl_estados[_tabletId]+=1;
+      if(Carl_estados[_tabletId] > 3)
+        Carl_estados[_tabletId] = 0;      
       break;
     case 3://alckmar
- 
+      if(_tabletId != 3){
+        //player.setMediaFile(Alck_audios[_tabletId*2+Alck_estados[_tabletId]]);
+        //player.start();
+        Alck_estados[_tabletId]+=1;
+        if(Alck_estados[_tabletId] > 1)
+          Alck_estados[_tabletId] = 0;    
+      }
       break;
     case 4://pablo
       break;   
@@ -537,42 +525,78 @@ void playAlvaro(){
     case 0:      
       background(255);
       textSize(200*tamanhoTexto);
-      if(Alv_direcaoDirParaEsq)
-        text(Alv_poema[0],(displayWidth+500)+Alv_shift,height/2);
-      else
-        text(Alv_poema[0],(-500)+Alv_shift,height/2);
-      textAlign(CENTER, CENTER);
-      fill(cor);
+      if(Alv_tocaCapina && Alv_poema[0] == "capina"){
+        if(Alv_direcaoDirParaEsq)
+          image(Alv_gif_capina.getFrame(255),(displayWidth+500)+Alv_shift,height/2);
+        else
+          image(Alv_gif_capina.getFrame(255),(-500)+Alv_shift,height/2);
+        imageMode(CENTER);
+      }
+      else{        
+        if(Alv_direcaoDirParaEsq)
+          text(Alv_poema[0],(displayWidth+500)+Alv_shift,height/2);
+        else
+          text(Alv_poema[0],(-500)+Alv_shift,height/2);
+        textAlign(CENTER, CENTER);
+        fill(cor);
+      }
       break;
     case 1:
       background(255);
       textSize(200*tamanhoTexto);
-      if(Alv_direcaoDirParaEsq)
-        text(Alv_poema[1],(displayWidth+500)+Alv_shift,height/2);
-      else
-        text(Alv_poema[1],(-400)+Alv_shift,height/2);
-      textAlign(CENTER, CENTER);
-      fill(cor);
+      if(Alv_tocaCapina && Alv_poema[1] == "capina"){
+        imageMode(CENTER);
+        if(Alv_direcaoDirParaEsq)
+          image(Alv_gif_capina.getFrame(255),(displayWidth+500)+Alv_shift,height/2);
+        else
+          image(Alv_gif_capina.getFrame(255),(-500)+Alv_shift,height/2);        
+      }
+      else{
+        if(Alv_direcaoDirParaEsq)
+          text(Alv_poema[1],(displayWidth+500)+Alv_shift,height/2);
+        else
+          text(Alv_poema[1],(-400)+Alv_shift,height/2);
+        textAlign(CENTER, CENTER);
+        fill(cor);
+      }
       break;
     case 2:
       background(255);
       textSize(200*tamanhoTexto);
-      if(Alv_direcaoDirParaEsq)
-        text(Alv_poema[2],(displayWidth+500)+Alv_shift,height/2);
-      else
-        text(Alv_poema[2],(-500)+Alv_shift,height/2);  
-      textAlign(CENTER, CENTER);
-      fill(cor);
+      if(Alv_tocaCapina && Alv_poema[2] == "capina"){
+        imageMode(CENTER);
+        if(Alv_direcaoDirParaEsq)
+          image(Alv_gif_capina.getFrame(255),(displayWidth+500)+Alv_shift,height/2);
+        else
+          image(Alv_gif_capina.getFrame(255),(-500)+Alv_shift,height/2);        
+      }
+      else{
+        if(Alv_direcaoDirParaEsq)
+          text(Alv_poema[2],(displayWidth+500)+Alv_shift,height/2);
+        else
+          text(Alv_poema[2],(-500)+Alv_shift,height/2);  
+        textAlign(CENTER, CENTER);
+        fill(cor);
+      }
       break;
     case 3:
       background(255);
       textSize(200*tamanhoTexto);
-      if(Alv_direcaoDirParaEsq)
-        text(Alv_poema[3],(displayWidth+500)+Alv_shift,height/2);
-      else
-        text(Alv_poema[3],(-500)+Alv_shift,height/2);  
-      textAlign(CENTER, CENTER);
-      fill(cor);
+      if(Alv_tocaCapina && Alv_poema[3] == "capina"){
+        imageMode(CENTER);
+        if(Alv_direcaoDirParaEsq)
+          image(Alv_gif_capina.getFrame(255),(displayWidth+500)+Alv_shift,height/2);
+        else
+          image(Alv_gif_capina.getFrame(255),(-500)+Alv_shift,height/2);        
+      }
+      else{
+        if(Alv_direcaoDirParaEsq)
+          text(Alv_poema[3],(displayWidth+500)+Alv_shift,height/2);
+        else
+          text(Alv_poema[3],(-500)+Alv_shift,height/2);  
+        textAlign(CENTER, CENTER);
+        fill(cor);
+      }
       break;      
   }
   if(Alv_direcaoDirParaEsq){    
@@ -605,27 +629,86 @@ void playAlvaro(){
     Alv_poema[2] = Alv_poema[1];
     Alv_poema[1] = Alv_poema[0];
     Alv_poema[0] = prim;
-  }  
+  }
+  if(Alv_tocaCapina && Alv_gif_capina.currentFrame() == 7){
+    Alv_tocaCapina = false;
+    Alv_gif_capina.setCurrentFrame(0);
+  }
 }
 
 void playCarlos(){
-  
+  imageMode(CENTER);
+  image(Carl_imgs[_tabletId*4+Carl_estados[_tabletId]],width/2,height/2);   
 }
 
 void playAlckmar(){
-  image(Alck_poema1A, 0, 0);
-  image(Alck_poema1B, 10, 0);
-  image(Alck_palavra1, 20, 0);
-  image(Alck_poema2A, 30, 0);
-  image(Alck_poema2B, 40, 0);
-  image(Alck_palavra2, 50, 0);
-  image(Alck_poema3A, 60, 0);
-  image(Alck_poema3B, 70, 0);
-  image(Alck_palavra3,80, 0); 
+  imageMode(CENTER);
+  if(_tabletId != 3){
+    image(Alck_imgs[_tabletId*2+Alck_estados[_tabletId]],width/2,height/2-50);
+    image(Alck_palavra[_tabletId],width/2,height/2+300);
+  }  
 }
 
 void playPablo(){
-  
+  int mostra = Pabl_ordem[_tabletId];
+  switch(mostra){
+    case 0: //alterar tamanho da fonte de acordo com acelerômetro
+      rect(0,0,width,height/2-32);
+      rect(0,height/2+32,width,height/2-32); 
+      rect(0,height/2-32,width/4,height/2);
+      rect(3*width/4,height/2-32,width/4,height/2);      
+      fill(0);
+      textSize(32*tamanhoTexto);
+      textAlign(CENTER, CENTER);
+      text(Pabl_versos[0],width/2,height/2);      
+      fill(cor);     
+      break;
+    case 1: //espelhamento
+      textSize(50*tamanhoTexto);
+      text(Pabl_versos[1],width/2,height/2-70);
+      pushMatrix();
+        scale(1, -1);
+        text(Pabl_versos[1],width/2, -height/2);
+      popMatrix();
+      textAlign(CENTER, CENTER);
+      fill(cor);   
+      break;
+    case 2: //com o tempo, derreter ou apagar fonte
+      background(255);
+      textSize(50*tamanhoTexto);
+      textAlign(CENTER, CENTER);
+      text(Pabl_versos[2],width/2,height/2); 
+      color newColor = color(red(cor),green(cor),blue(cor),apagar); 
+      fill(newColor);
+      println(apagar);
+      apagar -= 0.5;
+      if(apagar < 0) apagar = 255;
+      break;
+    case 3: //estrofe bem apagada, com letras e palavras bem juntas
+      background(255);
+      textSize(50*tamanhoTexto);
+      textAlign(CENTER, CENTER);
+      textLeading(50);       
+      color newColor2 = color(red(cor),green(cor),blue(cor),25);
+      fill(newColor2);
+      text(Pabl_versos[3],width/2,height/2);
+      break;
+    case 4: //versos da estrofe caindo em um lago e criando ondas. Interator pode tocar e gerar mais ondas no lago, surgindo palavras
+      background(255);
+      textSize(50*tamanhoTexto);
+      textAlign(CENTER, CENTER);
+      fill(cor);
+      text(Pabl_versos[4],width/2,height/2);
+      break;
+    case 5: //estrofe se distancia aos poucos, ao final palavras se desfazem em tiras
+      background(255);
+      textSize(50*tamanhoTexto);
+      textAlign(CENTER, CENTER);
+      fill(cor);
+      text(Pabl_versos[5],width/2,height/2);
+      //scale
+      break;
+  }
 }
 
 void conteudoRogerio(){
@@ -704,19 +787,14 @@ void conteudoAlvaro(){
   Alv_poema[0] = "um";
   Alv_poema[1] = "corta";
   Alv_poema[2] = "capina";
-  Alv_poema[3] = "outro";
-  Alv_poema[4] = "renova";
-  Alv_gif_capina= new IMGAnimation("capina#.png", 8, 1);
-  Alv_audios = new String [5];
-  Alv_audios [0] = "alv1_um.mp3";
-  Alv_audios [1] = "alv1_corta.mp3";
-  Alv_audios [2] = "alv1_capina.mp3";
-  Alv_audios [3] = "alv1_renova.mp3";
-  Alv_audios [4] = "alv1_outro.mp3";
+  Alv_poema[3] = "renova";
+  Alv_poema[4] = "outro";
+  Alv_gif_capina= new IMGAnimation("capina#.png", 8, 5,false);  
 }
 
 void conteudoCarlos(){
-  //Carl_gif_capina = loadImage("capina.gif");
+  Carl_estados = new int[4];
+  for(int i=0;i<4;i++) Carl_estados[i] = 0;
   Carl_audios = new String [12];
   Carl_audios [0] = "carlos1onde.mp3";
   Carl_audios [1] = "carlos1ondesele1.mp3";
@@ -730,18 +808,39 @@ void conteudoCarlos(){
   Carl_audios [9] = "carlos4nada.mp3";
   Carl_audios [10] = "carlos4ondesele4.mp3";
   Carl_audios [11] = "carlos4poem4.mp3";
+  Carl_imgs = new PImage [16];
+  Carl_imgs[0] = loadImage("carlos11.png");//?
+  Carl_imgs[1] = loadImage("carlos12.png");//onde
+  Carl_imgs[2] = loadImage("carlos13.png");//onde se lê
+  Carl_imgs[3] = loadImage("carlos14.png");//P
+  Carl_imgs[4] = loadImage("carlos21.png");//:
+  Carl_imgs[5] = loadImage("carlos22.png");//se lê
+  Carl_imgs[6] = loadImage("carlos23.png");//onde se lê:
+  Carl_imgs[7] = loadImage("carlos24.png");//O
+  Carl_imgs[8] = loadImage("carlos31.png");//!
+  Carl_imgs[9] = loadImage("carlos32.png");//tudo
+  Carl_imgs[10] = loadImage("carlos33.png");//onde se lê!
+  Carl_imgs[11] = loadImage("carlos34.png");//E
+  Carl_imgs[12] = loadImage("carlos41.png");//...
+  Carl_imgs[13] = loadImage("carlos42.png");//nada
+  Carl_imgs[14] = loadImage("carlos43.png");//onde se lê...
+  Carl_imgs[15] = loadImage("carlos44.png");//M
 }
 
 void conteudoAlckmar(){
-  Alck_poema1A = loadImage("alckmar1A.png");
-  Alck_palavra1 = loadImage("alckmar1.png");
-  Alck_poema1B = loadImage("alckmar1B.png");
-  Alck_poema2A = loadImage("alckmar2A.png");
-  Alck_palavra2 = loadImage("alckmar2.png");
-  Alck_poema2B = loadImage("alckmar2B.png");
-  Alck_poema3A = loadImage("alckmar3A.png");
-  Alck_palavra3 = loadImage("alckmar3.png");
-  Alck_poema3B = loadImage("alckmar3B.png");
+  Alck_imgs = new PImage [6];
+  Alck_imgs[0] = loadImage("alckmar1A.png");
+  Alck_imgs[1] = loadImage("alckmar1B.png");
+  Alck_imgs[2] = loadImage("alckmar2A.png");
+  Alck_imgs[3] = loadImage("alckmar2B.png");
+  Alck_imgs[4] = loadImage("alckmar3A.png");
+  Alck_imgs[5] = loadImage("alckmar3B.png");
+  Alck_palavra = new PImage [3];
+  Alck_palavra[0] = loadImage("alckmar1.png");
+  Alck_palavra[1] = loadImage("alckmar2.png");
+  Alck_palavra[2] = loadImage("alckmar3.png");
+  Alck_estados = new int[3];
+  for(int i=0;i<3;i++) Alck_estados[i] = 0;
   Alck_audios = new String [6];
   Alck_audios[0] = "alck1.mp3";
   Alck_audios[1] = "alck2.mp3";
@@ -752,6 +851,8 @@ void conteudoAlckmar(){
 }
 
 void conteudoPablo(){
+  Pabl_ordem = new int [6];
+  for(int i=0;i<6;i++) Pabl_ordem[i] = i;
   Pabl_versos = new String [6];
   Pabl_versos[0] = "Estou sem espaço aqui, mas continuo.";
   Pabl_versos[1] = "Estou no meio de uma reflexão e continuo.";
