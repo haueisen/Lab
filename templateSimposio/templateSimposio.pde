@@ -1,3 +1,12 @@
+import shiffman.box2d.*;
+import org.jbox2d.common.*;
+import org.jbox2d.dynamics.joints.*;
+import org.jbox2d.collision.shapes.*;
+import org.jbox2d.collision.shapes.Shape;
+import org.jbox2d.common.*;
+import org.jbox2d.dynamics.*;
+import org.jbox2d.dynamics.contacts.*;
+
 import java.util.*;
 import android.view.MotionEvent;
 
@@ -19,7 +28,7 @@ float sizeX;
 float sizeY;
 float originX;
 float originY;
-boolean portrait = true;
+boolean portrait = false;
 boolean sync;
 
 PFont font;
@@ -35,6 +44,12 @@ Vagalume vagalume;
 
 float accelX;
 float accelY;
+
+Box2DProcessing box2d;
+Spring spring;
+ArrayList<Mandala> pairs;
+
+ArrayList<Boundary> boundaries;
 
 void setup() {
   sync = true;
@@ -58,14 +73,24 @@ void setup() {
 
   objetos = new ArrayList<Objeto>();
   replicados = new ArrayList<Objeto>();
-  esperandoID = new ArrayList<Objeto>();
+  //esperandoID = new ArrayList<Objeto>();
   remove = new ArrayList<Integer>();
+  boundaries = new ArrayList<Boundary>();
   nextId = 0;
+
+  box2d = new Box2DProcessing(this);
+  box2d.createWorld();
+  pairs = new ArrayList<Mandala>();
+  spring = new Spring();
+  
+  boundaries.add(new Boundary(displayWidth/2,0,1.5*displayWidth,10));
+  boundaries.add(new Boundary(0,displayHeight/2,10,1.5*displayHeight));
+  boundaries.add(new Boundary(displayWidth,displayHeight/2,10,1.5*displayHeight));
 }
 
 void draw() {
   // print(sync);
-  println(frameRate+" "+objetos.size());
+  // println(frameRate+" "+objetos.size());
   //
   if (sync) {
     //protocolo para numerar os celulares
@@ -127,35 +152,49 @@ void draw() {
       //print(_client.numMessages());
       JSONObject j = _client.getNextMessage();
       processMessage(j);
-    }    
+    } 
+    box2d.step();
+    spring.update(mouseX, mouseY);
+    for (int i = 0; i < pairs.size (); i++) {  
+      Mandala p = pairs.get(i);
+      p.display();
+    }
     for (Objeto o : objetos) {
       o.processa();
       if (o.obj == "Circulo") {
         //AQUI estourar bolha
-        
+        //ao estourar bolha criar mandala
+        //se ja houver mandala, nao cria
       }      
       //println(objetos.size()+" "+o.id+" "+o.replicado+" "+o.recebido);
       //se objeto perto da borda replica em outro dispositvo
-      if ((o.y + o.radius) >= sizeY) {
+      if ((portrait&&((o.y + o.radius) >= sizeY))|| 
+        (!portrait&&((o.x + o.radius) >= sizeX))) {
         if (o.replicado == false) {
           o.replicado = true;
           if (o.obj == "Circulo") {
-            replicados.add(new Circulo(o.id, o.x, o.y - sizeY, o.radius));
+            if (portrait) replicados.add(new Circulo(o.id, o.x, o.y - sizeY, o.radius));
+            else replicados.add(new Circulo(o.id, o.x - sizeX, o.y, o.radius));
           } else if (o.obj == "Vagalume") {
-            replicados.add(new Vagalume(o.id, o.x, o.y - sizeY, o.vx, o.vy, o.radius));
+            if (portrait) replicados.add(new Vagalume(o.id, o.x, o.y - sizeY, o.vx, o.vy, o.radius));
+            else replicados.add(new Vagalume(o.id, o.x - sizeX, o.y, o.vx, o.vy, o.radius));
           }
         }
-      } else if ((o.y - o.radius) <= 0) {
+      } else if ((portrait&&((o.y - o.radius) <= 0))||
+        (!portrait&&((o.x - o.radius) <= 0))) {
         if (o.replicado == false) {
           o.replicado = true;
           if (o.obj == "Circulo") {
-            replicados.add(new Circulo(o.id, o.x, o.y + sizeY, o.radius));
+            if (portrait) replicados.add(new Circulo(o.id, o.x, o.y + sizeY, o.radius));
+            else replicados.add(new Circulo(o.id, o.x + sizeX, o.y, o.radius));
           } else if (o.obj == "Vagalume") {
-            replicados.add(new Vagalume(o.id, o.x, o.y + sizeY, o.vx, o.vy, o.radius));
+            if (portrait) replicados.add(new Vagalume(o.id, o.x, o.y + sizeY, o.vx, o.vy, o.radius));
+            else replicados.add(new Vagalume(o.id, o.x + sizeX, o.y, o.vx, o.vy, o.radius));
           }
         }
       }
-      if (((o.y + o.radius) < sizeY)&&((o.y - o.radius) > 0)) {
+      if ((portrait&&(((o.y + o.radius) < sizeY)&&((o.y - o.radius) > 0)))||
+        (!portrait&&(((o.x + o.radius) < sizeX)&&((o.x - o.radius) > 0)))) {
         //objeto recebido, removendo o status de replicado
         if (o.recebido) {
           o.replicado = false;
@@ -163,23 +202,24 @@ void draw() {
         o.recebido = false;
       }
       //objeto fora da tela
-      if (((o.y - o.radius) >= sizeY)||((o.y + o.radius) <= 0)) {        
+      if ((portrait&&(((o.y - o.radius) >= sizeY)||((o.y + o.radius) <= 0)))||
+        (!portrait&&(((o.x - o.radius) >= sizeX)||((o.x + o.radius) <= 0)))) {        
         if (!o.recebido) {
           //println("remove");
           remove.add(0, objetos.indexOf(o));
         }
       } else {
-        if(!o.obj.equals("Vagalume")){    
+        if (!o.obj.equals("Vagalume")) {    
           o.desenha();
-        }else{
-          vagalume = (Vagalume) o;          
+        } else {
+          vagalume = (Vagalume) o;
         }
       }
     }
-    if(vagalume.ligado){
+    if (vagalume.ligado) {
       noStroke();
-      fill(50,50,50,200);
-      rect(0,0,sizeX,sizeY);
+      fill(50, 50, 50, 200);
+      rect(0, 0, sizeX, sizeY);
     }
     vagalume.desenha();    
     //println(replicados.size());
@@ -214,7 +254,7 @@ void draw() {
           j.setFloat("y", r.y);
           j.setFloat("vx", r.vx);
           j.setFloat("vy", r.vy);
-          if(vagalume != null)j.setBoolean("ligado",vagalume.ligado);          
+          if (vagalume != null)j.setBoolean("ligado", vagalume.ligado);          
           j.setFloat("raio", r.radius);
         }
         _client.sendJSON(j);
@@ -228,18 +268,11 @@ void draw() {
     }
 
     remove.clear();
-    
-    if(mousePressed) {
 
-      objetos.add(new Circulo(nextId, mouseX, mouseY, 25));
-      nextId++;
-      /*
-       esperandoID.add(new Circulo(0,mouseX,mouseY,25));    
-       JSONObject j = new JSONObject();
-       j.setString("ac","newid");    
-       _client.sendJSON(j);
-       println("requested id");
-       */
+    if (mousePressed) {
+
+      // objetos.add(new Circulo(nextId, mouseX, mouseY, 25));
+      // nextId++;
     }
   }
 }
@@ -248,22 +281,29 @@ void draw() {
 //acelerometro
 void onAccelerometerEvent(float x, float y, float z)
 {
-  accelX = x;
+  accelX = -x;
   accelY = y;
 }
 
 //gestos
 void onTap(float x, float y)
 {
-  if(vagalume != null){
-    if((x < vagalume.x + vagalume.radius)&&
+  if (vagalume != null) {
+    if ((x < vagalume.x + vagalume.radius)&&
       (x > vagalume.x - vagalume.radius)&&
       (y < vagalume.y + vagalume.radius)&&
-      (y > vagalume.y - vagalume.radius)){
-    
+      (y > vagalume.y - vagalume.radius)) {
+
       vagalume.ligado = !vagalume.ligado;
-      
     }
+  }
+}
+
+void onDoubleTap(float x, float y) {
+
+  if (!sync&&( y <= (displayHeight/3.0))) {  
+    Mandala p = new Mandala(x, y, max(40, y));
+    pairs.add(p);
   }
 }
 
@@ -286,16 +326,19 @@ void connect() {
     sync = false;
     sensor.start();
 
-    if (id == 0) {
-      vagalume = new Vagalume(nextId, 40);
-      nextId++;
-      //AQUI mandar msg para pegar ID
-      objetos.add(vagalume);
-    }
+    nextId = (id+1) * 1000;
 
-    JSONObject j1 = new JSONObject();
-    j1.setString("ac", "newid");
-    _client.sendJSON(j1);
+    if (id == 0) {
+      vagalume = new Vagalume(0, 40);
+      // nextId++;
+      //AQUI mandar msg para pegar ID
+
+      objetos.add(vagalume);
+      //      esperandoID.add(vagalume);
+      //      JSONObject v = new JSONObject();
+      //      v.setString("ac","newid");    
+      //      _client.sendJSON(v);
+    }
   } else {
     print("not connected");
   }
@@ -351,7 +394,21 @@ void mousePressed() {
         connect();
       }
     }
-  } 
+  } else {
+
+    for (int i = 0; i < pairs.size (); i++) {
+      // Check to see if the mouse was clicked on the box
+      Particle p = pairs.get(i).movel;    
+      if (p.contains(mouseX, mouseY)) {
+        // And if so, bind the mouse location to the box with a spring
+        spring.bind(mouseX, mouseY, p);
+      }
+    }
+  }
+}
+
+void mouseReleased() {
+  spring.destroy();
 }
 
 //json handler
@@ -366,7 +423,7 @@ void processMessage(JSONObject msg) {
       float x = msg.getFloat("x");
       float y = msg.getFloat("y");
       float r = msg.getFloat("raio");
-      
+
       objetos.add(new Circulo(ID, x, y, r));
     } else if (objeto.equals("Vagalume")) {
       int ID = msg.getInt("ID");
@@ -378,17 +435,17 @@ void processMessage(JSONObject msg) {
       boolean l = msg.getBoolean("ligado");
       Vagalume v = new Vagalume(ID, x, y, vx, vy, r);
       v.ligado = l; 
-      objetos.add(v);      
+      objetos.add(v);
     }
     objetos.get(objetos.size()-1).recebido = true;
     objetos.get(objetos.size()-1).replicado = true;
   } else if (ac.equals("objid")) {
-    println("objid"); 
-    println(msg.getInt("numero"));
+    //println("objid"); 
+    //println(msg.getInt("numero"));
     if (esperandoID.size() > 0) {
       Objeto o = esperandoID.get(0);
       o.id = msg.getInt("numero");      
-      objetos.add(o);
+      objetos.add(o);      
       esperandoID.remove(0);
     }
   } else if (ac.equals("erro")) {
