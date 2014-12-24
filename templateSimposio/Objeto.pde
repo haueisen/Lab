@@ -10,6 +10,11 @@ public abstract class Objeto{
   boolean replicado;
   boolean recebido;
   
+  int qualImagem;
+  float gravidade, vento;
+  float hue;
+  
+  
   String obj;
   
   public Objeto(int id ,float x, float y, float r){

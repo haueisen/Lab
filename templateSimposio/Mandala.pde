@@ -4,11 +4,17 @@ class Mandala {
   Particle movel;
 
   float len;
+  float x;
+  float y;  
+ 
   // Chain constructor
   Mandala(float x, float y, float l) {
+    this.x = x;
+    this.y = y;
     //len = 100;
     len = l;
 
+    
     fixa = new Particle(x,0,true);
     movel = new Particle(x+50*random(-1,1),y,false);
 
@@ -22,7 +28,7 @@ class Mandala {
     
     // These properties affect how springy the joint is 
     djd.frequencyHz = 0;  // Try a value less than 5 (0 for no elasticity)
-    djd.dampingRatio = 0.7; // Ranges between 0 and 1
+    djd.dampingRatio = 0.1; // Ranges between 0 and 1
 
     // Make the joint.  Note we aren't storing a reference to the joint ourselves anywhere!
     // We might need to someday, but for now it's ok
@@ -35,7 +41,8 @@ class Mandala {
   void display() {
     Vec2 pos1 = box2d.getBodyPixelCoord(fixa.body);
     Vec2 pos2 = box2d.getBodyPixelCoord(movel.body);
-    stroke(0);
+    strokeWeight(3);
+    stroke(100,150,100);
     line(pos1.x,pos1.y,pos2.x,pos2.y);
 
   //  fixa.display();
