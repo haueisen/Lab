@@ -1,6 +1,7 @@
 public class Bolha extends Objeto {
 
-  
+  float tempoVida;  
+  float createTime;
   
   Bolha(int id, float posX, float posY, float raio, float _hue, float _vx, float _vy, int _qualImagem) {
     super(id, posX, posY, 0);
@@ -11,6 +12,8 @@ public class Bolha extends Objeto {
     gravidade= -0.002;
     qualImagem = _qualImagem;
     hue = _hue;
+    tempoVida = random(5, 20) * 1000;
+    createTime = millis();
   }
 
   public void processa() {
@@ -18,7 +21,7 @@ public class Bolha extends Objeto {
     x =x + vx;
     y =y + vy;
     vx = vx +vento;
-    vy =vy+ gravidade;
+    vy =vy+ gravidade;   
   }  
 
 
@@ -34,10 +37,11 @@ public class Bolha extends Objeto {
     imageMode(CORNER);
   }
 
-  float tempoVida() {
-    float vida;
-    vida = random(5, 40); 
-    return vida;
+  //float tempoVida() {
+    boolean tempoVida(){
+    //float vida;
+    //vida = random(5, 40); 
+    return ((millis() - createTime)  > tempoVida);
   }
 
   void movimento(float _vento) {

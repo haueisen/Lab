@@ -279,7 +279,8 @@ void draw() {
     for (Objeto o : objetos) {
       if (o.obj.equals("Bolha")) {
         Bolha b = (Bolha) o; 
-        if (millis() - tempoVida > b.tempoVida()*1000) {
+       // if (millis() - tempoVida > b.tempoVida()*1000) {
+         if(b.tempoVida()){
           //arrayBolhas.remove(b);
           remove.add (0, objetos.indexOf(b));
         }
@@ -305,7 +306,7 @@ void draw() {
         (!portrait&&((o.x + o.radius) >= sizeX))) {
         if (o.replicado == false) {
           o.replicado = true;
-          if (o.obj == "Circulo") {
+          if (o.obj == "Bolha") {
             if (portrait) replicados.add(new Bolha(o.id, o.x - sizeX, o.y, o.radius, o.hue, o.vx, o.vy, o.qualImagem));
             else replicados.add(new Bolha(o.id, o.x - sizeX, o.y, o.radius, o.hue, o.vx, o.vy, o.qualImagem));
           } else if (o.obj == "Vagalume") {
@@ -320,7 +321,7 @@ void draw() {
         (!portrait&&((o.x - o.radius) <= 0))) {
         if (o.replicado == false) {
           o.replicado = true;
-          if (o.obj == "Circulo") {
+          if (o.obj == "Bolha") {
             if (portrait) replicados.add(new Bolha(o.id, o.x, o.y + sizeY, o.radius, o.hue, o.vx, o.vy, o.qualImagem));
             else replicados.add(new Bolha(o.id, o.x, o.y + sizeY, o.radius, o.hue, o.vx, o.vy, o.qualImagem));
           } else if (o.obj == "Vagalume") {
@@ -365,6 +366,8 @@ void draw() {
         rect(0, 0, sizeX, sizeY);
       }
       vagalume.desenha();
+    }else{
+    //TODO
     }
 
     //println(replicados.size());
@@ -373,6 +376,7 @@ void draw() {
         JSONObject j = new JSONObject();
         j.setString("ac", "objeto");
         if (r.obj == "Bolha") {
+          //print("bolha");
           j.setString("Objeto", "Bolha");
           if (r.y > sizeY/2) {
             j.setInt("para", ((id - 1)+2) % 2);
@@ -428,6 +432,10 @@ void draw() {
     replicados.clear();
 
     for (Integer i : remove) {
+      print(objetos.get(i.intValue()).obj);
+      if(objetos.get(i.intValue()).obj.equals("Vagalume")){
+        vagalume = null;
+      }      
       objetos.remove(i.intValue());
     }
 
@@ -461,7 +469,8 @@ void onTap(float x, float y)
       vagalume.ligado = !vagalume.ligado;
     }
   }
-  if (dist(mouseX, mouseY, 150, height/2) < 100) {
+  if ((dist(mouseX, mouseY, 150, height/2) < 100) && (id == 0)){
+    
     rodou = true;
     t0 = millis();
     voou = true;
@@ -537,7 +546,7 @@ void onFlick( float x, float y, float px, float py, float v)
 
 
 void connect() {
-  _client = new JSONTCPClient("192.168.0.123", 8765);       
+  _client = new JSONTCPClient("150.164.112.73", 8765);       
 
   if (_client.isConnected()) {
     print("connected");
@@ -634,6 +643,7 @@ void processMessage(JSONObject msg) {
   String ac = msg.getString("ac");
   if (ac.equals("objeto")) {
     String objeto = msg.getString("Objeto");
+    print(objeto);
     if (objeto.equals("Bolha")) {
       int ID = msg.getInt("ID");
       float x = msg.getFloat("x");
@@ -643,7 +653,7 @@ void processMessage(JSONObject msg) {
       float hue = msg.getFloat("hue");
       float r = msg.getFloat("raio");
       int nimg = msg.getInt("img");
-      print(msg);
+      //print(msg);
       objetos.add(new Bolha(ID, x, y, r, hue, vx, vy, nimg));
     } else if (objeto.equals("Vagalume")) {
       int ID = msg.getInt("ID");
