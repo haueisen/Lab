@@ -41,6 +41,7 @@ ArrayList<Integer> remove;
 int nextId;
 
 Vagalume vagalume;
+Abelha abelha;
 
 float accelX = 0;
 float accelY = 0;
@@ -299,8 +300,9 @@ void draw() {
     }
     for (Objeto o : objetos) {
       o.processa();
-
-      //println(objetos.size()+" "+o.id+" "+o.replicado+" "+o.recebido);
+      //println(objetos.size());
+      //println(objetos.size()+" "+o.obj+" "+o.replicado+" "+o.recebido);
+      
       //se objeto perto da borda replica em outro dispositvo
       if ((portrait&&((o.y + o.radius) >= sizeY))|| 
         (!portrait&&((o.x + o.radius) >= sizeX))) {
@@ -312,7 +314,7 @@ void draw() {
           } else if (o.obj == "Vagalume") {
             if (portrait) replicados.add(new Vagalume(o.id, o.x, o.y - sizeY, o.vx, o.vy, o.radius));
             else replicados.add(new Vagalume(o.id, o.x - sizeX, o.y, o.vx, o.vy, o.radius));
-          } else if (o.obj == "Abelha") {
+          } else if (o.obj == "Abelha") {            
             if (portrait) replicados.add(new Abelha(o.id, o.x, o.y - sizeY, o.vx, o.vy, o.radius));
             else replicados.add(new Abelha(o.id, o.x - sizeX, o.y, o.vx, o.vy, o.radius));
           }
@@ -353,6 +355,7 @@ void draw() {
           o.desenha();
         } else {
           vagalume = (Vagalume) o;
+          //println(o.x+" "+o.y);
         }
       }
     }
@@ -432,7 +435,7 @@ void draw() {
     replicados.clear();
 
     for (Integer i : remove) {
-      print(objetos.get(i.intValue()).obj);
+     // print(objetos.get(i.intValue()).obj);
       if(objetos.get(i.intValue()).obj.equals("Vagalume")){
         vagalume = null;
       }      
@@ -490,7 +493,7 @@ void onTap(float x, float y)
   //criacao mandalas
   qualBolha = testaClique(x, y);
   
-  println(qualBolha);
+  //println(qualBolha);
   if (qualBolha != null) {
     if (!sync&&( y <= (displayHeight/2.0))) {
       if ((id == 0) && (x < displayWidth*0.2)) return;
@@ -561,8 +564,14 @@ void connect() {
 
     if (id == 0) {
       //mic.start();
-      vagalume = new Vagalume(0, 50);
+      vagalume = new Vagalume(0, 50);      
       objetos.add(vagalume);
+      
+      abelha = new Abelha(1001,-100,(height/2),10,0,50);
+      abelha.replicado = true;
+      abelha.recebido = true;
+      objetos.add(abelha);      
+     // println(objetos.size());
     }
   } else {
     print("not connected");
@@ -643,7 +652,7 @@ void processMessage(JSONObject msg) {
   String ac = msg.getString("ac");
   if (ac.equals("objeto")) {
     String objeto = msg.getString("Objeto");
-    print(objeto);
+    //print(objeto);
     if (objeto.equals("Bolha")) {
       int ID = msg.getInt("ID");
       float x = msg.getFloat("x");
@@ -674,7 +683,7 @@ void processMessage(JSONObject msg) {
       float vy = msg.getFloat("vy");
       float r = msg.getFloat("raio");
 
-      Abelha abe = new Abelha(ID, x, y, vx, vy, 0);
+      Abelha abe = new Abelha(ID, x, y, vx, vy, r);
       objetos.add(abe);
     }
     objetos.get(objetos.size()-1).recebido = true;
@@ -692,8 +701,8 @@ void processMessage(JSONObject msg) {
     //int ID = msg.getInt("ID");
     int altura = msg.getInt("altura");
     float alt = altura / 100.0;
-    println(msg);
-    Abelha abe = new Abelha(666, -100, displayHeight*alt, 100, 0, 0);
+   // println(msg);
+    Abelha abe = new Abelha(666, -100, displayHeight*alt, 10, 0, 50);
     objetos.add(abe);
 
     objetos.get(objetos.size()-1).recebido = true;

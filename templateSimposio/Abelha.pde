@@ -13,13 +13,14 @@ public class Abelha extends Objeto {
   public Abelha(int id, float x, float y, float vx, float vy, float r) {
     super(id, x, y, 0);
 
-    println("Abelha: "+" "+x+" "+y);
+    //println("Abelha: "+id+" "+x+" "+y);
 
     this.vx = vx;
     this.vy = vy;
 
     this.obj = "Abelha";
-
+    this.radius = r;
+    
     quadros[0] = loadImage("abelha1.png");
     quadros[1] = loadImage("abelha2.png");
     quadros[2] = loadImage("abelha3.png");
@@ -27,8 +28,8 @@ public class Abelha extends Objeto {
 
   public void processa() {
     //processamento do objeto
-
-    x += vx;
+    // println(x+" "+y);
+    this.x += vx;
     quadro = (quadro + 1) % 3;
   } 
 
@@ -36,13 +37,13 @@ public class Abelha extends Objeto {
     //desenha objeto na tela
 
     
-    pushMatrix();
-    resetMatrix();
-    translate(x, y);
+   // pushMatrix();
+   // resetMatrix();
+   // translate(x, y);
     imageMode(CENTER);
     //stroke(0);
-    image(quadros[quadro], 0, 0,2*radius,2*radius);
-    popMatrix();
+    image(quadros[0], x, y,2*radius,2*radius);    
+   // popMatrix();
   }
 }
 
