@@ -125,7 +125,7 @@ class Particle {
       translate(pos.x, pos.y);
       rotate(a/3);
       imageMode(CENTER);
-      image(mandalas[img], 0, 0,2*r,2*r);  
+      image(mandalas[img], 0, 0);  
       //fill(col);
       //stroke(0);
       //strokeWeight(1);

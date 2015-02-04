@@ -17,7 +17,7 @@ class Mandala {
     
     fixa = new Particle(x,0,true);
     movel = new Particle(x+50*random(-1,1),y,false);
-
+    movel.body.setLinearDamping(0.2);
 
     DistanceJointDef djd = new DistanceJointDef();
     // Connection between previous particle and this one
@@ -43,7 +43,8 @@ class Mandala {
     Vec2 pos2 = box2d.getBodyPixelCoord(movel.body);
     strokeWeight(3);
     stroke(100,150,100);
-    line(pos1.x,pos1.y,pos2.x,pos2.y);
+    noFill();
+    bezier(x, -100, pos1.x, pos1.y, pos2.x-(pos2.x-pos1.x)/2, pos2.y, pos2.x, pos2.y);
 
   //  fixa.display();
     movel.display();
