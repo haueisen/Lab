@@ -32,8 +32,9 @@ public class Bolha extends Objeto {
     stroke(255);
     imageMode(CENTER);
     //println(imagemLinha);
-    image(imagemLinha[qualImagem], x, y, radius, radius);
-    ellipse(x, y, radius, radius);
+    //image(imagemLinha[qualImagem], x, y, radius, radius);
+    ellipse(x, y, radius, radius);    
+    image(imagemLinha[qualImagem], x, y);
     imageMode(CORNER);
   }
 

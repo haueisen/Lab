@@ -71,6 +71,14 @@ Bolha qualBolha;
 float t0;
 float tempoVida;
 
+//Dentes de leao
+int NUM = 6;            //Number of poems
+int NUMFLOWERS = 4;     //Max number of flowers
+
+PImage[] poemA, poemB, poemC, poemD, poemE, poemF; //Array of Images, poems are array of sentences of images
+Dandelion[] dentesDeLeao;
+
+
 void setup() {
   sync = true;
 
@@ -99,7 +107,7 @@ void setup() {
   nextId = 0;
 
   box2d = new Box2DProcessing(this);
-  box2d.createWorld();
+  box2d.createWorld(new Vec2(0,-200));
   box2d.listenForCollisions();
 
   pairs = new ArrayList<Mandala>();
@@ -156,10 +164,19 @@ void setup() {
   mandalas[25] = loadImage("vermelho5.png");
   mandalas[26] = loadImage("vermelho6.png");
   mandalas[27] = loadImage("vermelho7.png");
+  
+  dentesDeLeao = new Dandelion[NUMFLOWERS]; 
+  for (int i=0; i<dentesDeLeao.length; i++) {
+    dentesDeLeao[i] = new Dandelion();
+  }
+
+  loadPoemImages();  
+  
+  //frameRate(24);
 }
 
 void draw() {
-  // print(sync);
+  print(frameRate);
   // println(frameRate+" "+objetos.size());
   //
   if (sync) {
@@ -362,6 +379,14 @@ void draw() {
     if (id == 0) {
       catavento.desenhaCatavento();
     }
+    for (int i=0; i<dentesDeLeao.length; i++) {
+      if (dentesDeLeao[i].isAlive()) {
+        dentesDeLeao[i].rendFlower();
+        if (!dentesDeLeao[i].isGrowing()) {
+          dentesDeLeao[i].isColliding(mouseX, mouseY);
+        }
+      }
+    }
     if (vagalume != null) {
       if (vagalume.ligado) {
         noStroke();
@@ -443,7 +468,11 @@ void draw() {
     }
 
     remove.clear();
-
+    
+     for (int i=0; i<dentesDeLeao.length; i++) {
+      dentesDeLeao[i].rendPoem();
+    }
+    
     //if (mousePressed) {
 
     // objetos.add(new Circulo(nextId, mouseX, mouseY, 25));
@@ -487,6 +516,15 @@ void onTap(float x, float y)
       criaBolha = false;
     }
     forcaSopro = sopro/ 100;
+  }
+
+   if (mouseY>2*height/3)
+  {
+    for (int i=0; i<dentesDeLeao.length; i++) {
+      if (!dentesDeLeao[i].isAlive()) {
+        dentesDeLeao[i].born(height, width, 124, 30, NUM);
+      }
+    }
   }
 
 
@@ -549,7 +587,7 @@ void onFlick( float x, float y, float px, float py, float v)
 
 
 void connect() {
-  _client = new JSONTCPClient("150.164.112.73", 8765);       
+  _client = new JSONTCPClient("150.164.112.70", 8765);       
 
   if (_client.isConnected()) {
     print("connected");
@@ -635,6 +673,7 @@ void mousePressed() {
       Particle p = pairs.get(i).movel;    
       if (p.contains(mouseX, mouseY)) {
         // And if so, bind the mouse location to the box with a spring
+        spring.destroy();
         spring.bind(mouseX, mouseY, p);
       }
     }
@@ -791,6 +830,116 @@ Bolha testaClique (float x, float y) {
     }
   }
   return null;
+}
+
+void loadPoemImages() {
+  // Poem A
+  this.poemA = new PImage[38];
+  this.poemA[0] = loadImage("Al_A0.png");
+  this.poemA[1] = loadImage("Al_A1.png");
+  this.poemA[2] = loadImage("Al_A2.png");
+  this.poemA[3] = loadImage("Al_A3.png");
+  this.poemA[4] = loadImage("pausa.png");
+  this.poemA[5] = loadImage("Al_B0.png");
+  this.poemA[6] = loadImage("Al_B1.png");
+  this.poemA[7] = loadImage("Al_B2.png");
+  this.poemA[8] = loadImage("Al_B3.png");
+  this.poemA[9] = loadImage("Al_B4.png");
+  this.poemA[10] = loadImage("pausa.png");
+  this.poemA[11] = loadImage("Al_C0.png");
+  this.poemA[12] = loadImage("Al_C1.png");
+  this.poemA[13] = loadImage("Al_C2.png");
+  this.poemA[14] = loadImage("Al_C3.png");
+  this.poemA[15] = loadImage("pausa.png");
+  this.poemA[16] = loadImage("Al_D0.png");
+  this.poemA[17] = loadImage("Al_D1.png");
+  this.poemA[18] = loadImage("Al_D2.png");
+  this.poemA[19] = loadImage("Al_D3.png");
+  this.poemA[20] = loadImage("pausa.png");
+  this.poemA[21] = loadImage("Al_E0.png");
+  this.poemA[22] = loadImage("Al_E1.png");
+  this.poemA[23] = loadImage("Al_E2.png");
+  this.poemA[24] = loadImage("Al_E3.png");
+  this.poemA[25] = loadImage("pausa.png");
+  this.poemA[26] = loadImage("Al_F0.png");
+  this.poemA[27] = loadImage("Al_F1.png");
+  this.poemA[28] = loadImage("Al_F2.png");
+  this.poemA[29] = loadImage("pausa.png");
+  this.poemA[30] = loadImage("Al_G0.png");
+  this.poemA[31] = loadImage("Al_G1.png");
+  this.poemA[32] = loadImage("pausa.png");
+  this.poemA[33] = loadImage("Al_H0.png");
+  this.poemA[34] = loadImage("Al_H1.png");
+  this.poemA[35] = loadImage("Al_H2.png");
+  this.poemA[36] = loadImage("Al_H3.png");
+  this.poemA[37] = loadImage("Al_H4.png");
+
+  // Poem b
+  this.poemB = new PImage[12];
+  this.poemB[0] = loadImage("RO1_A0.png");
+  this.poemB[1] = loadImage("pausa.png");
+  this.poemB[2] = loadImage("RO1_B0.png");
+  this.poemB[3] = loadImage("RO1_B1.png");
+  this.poemB[4] = loadImage("RO1_B2.png");
+  this.poemB[5] = loadImage("pausa.png");
+  this.poemB[6] = loadImage("RO1_C0.png");
+  this.poemB[7] = loadImage("RO1_C1.png");
+  this.poemB[8] = loadImage("RO1_C2.png");
+  this.poemB[9] = loadImage("pausa.png");
+  this.poemB[10] = loadImage("RO1_D0.png");
+  this.poemB[11] = loadImage("RO1_D1.png");
+
+  // Poem C
+  this.poemC = new PImage[14];
+  this.poemC[0] = loadImage("RO2_A0.png");
+  this.poemC[1] = loadImage("pausa.png");
+  this.poemC[2] = loadImage("RO2_B0.png");
+  this.poemC[3] = loadImage("RO2_B1.png");
+  this.poemC[4] = loadImage("RO2_B2.png");
+  this.poemC[5] = loadImage("pausa.png");
+  this.poemC[6] = loadImage("RO2_C0.png");
+  this.poemC[7] = loadImage("RO2_C1.png");
+  this.poemC[8] = loadImage("RO2_C2.png");
+  this.poemC[9] = loadImage("RO2_C3.png");
+  this.poemC[10] = loadImage("pausa.png");
+  this.poemC[11] = loadImage("RO2_D0.png");
+  this.poemC[12] = loadImage("RO2_D1.png");
+  this.poemC[13] = loadImage("RO2_D2.png");
+
+  // Poem D
+  this.poemD = new PImage[9];
+  this.poemD[0] = loadImage("RO3_A0.png");
+  this.poemD[1] = loadImage("pausa.png");
+  this.poemD[2] = loadImage("RO3_B0.png");
+  this.poemD[3] = loadImage("RO3_B1.png");
+  this.poemD[4] = loadImage("RO3_B2.png");
+  this.poemD[5] = loadImage("RO3_B3.png");
+  this.poemD[6] = loadImage("RO3_B4.png");
+  this.poemD[7] = loadImage("RO3_B5.png");
+  this.poemD[8] = loadImage("RO3_B6.png");
+
+  // Poem E
+  this.poemE = new PImage[8];
+  this.poemE[0] = loadImage("RO4_A0.png");
+  this.poemE[1] = loadImage("pausa.png");
+  this.poemE[2] = loadImage("RO4_B0.png");
+  this.poemE[3] = loadImage("RO4_B1.png");
+  this.poemE[4] = loadImage("RO4_B2.png");
+  this.poemE[5] = loadImage("RO4_B3.png");
+  this.poemE[6] = loadImage("RO4_B4.png");
+  this.poemE[7] = loadImage("RO4_B5.png");
+
+  // Poem F
+  this.poemF = new PImage[9];
+  this.poemF[0] = loadImage("pausa.png");
+  this.poemF[1] = loadImage("pausa.png");
+  this.poemF[2] = loadImage("pausa.png");
+  this.poemF[3] = loadImage("pausa.png");
+  this.poemF[4] = loadImage("pausa.png");
+  this.poemF[5] = loadImage("pausa.png");
+  this.poemF[6] = loadImage("pausa.png");
+  this.poemF[7] = loadImage("pausa.png");
+  this.poemF[8] = loadImage("pausa.png");
 }
 
 //void keyPressed() {
