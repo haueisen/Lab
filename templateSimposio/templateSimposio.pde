@@ -107,9 +107,10 @@ void setup() {
   nextId = 0;
 
   box2d = new Box2DProcessing(this);
-  box2d.createWorld(new Vec2(0,-200));
+  box2d.createWorld();
   box2d.listenForCollisions();
-
+  box2d.setScaleFactor(100f);
+  
   pairs = new ArrayList<Mandala>();
   spring = new Spring();
 
