@@ -2,6 +2,7 @@ public class Bolha extends Objeto {
 
   float tempoVida;  
   float createTime;
+  boolean die;
   
   Bolha(int id, float posX, float posY, float raio, float _hue, float _vx, float _vy, int _qualImagem) {
     super(id, posX, posY, 0);
@@ -14,6 +15,7 @@ public class Bolha extends Objeto {
     hue = _hue;
     tempoVida = random(5, 20) * 1000;
     createTime = millis();
+    die = false;
   }
 
   public void processa() {

@@ -177,7 +177,7 @@ void setup() {
 }
 
 void draw() {
-  print(frameRate);
+  //print(frameRate);
   // println(frameRate+" "+objetos.size());
   //
   if (sync) {
@@ -299,12 +299,13 @@ void draw() {
       if (o.obj.equals("Bolha")) {
         Bolha b = (Bolha) o; 
        // if (millis() - tempoVida > b.tempoVida()*1000) {
-         if(b.tempoVida()){
+         if(b.tempoVida() || b.die){
           //arrayBolhas.remove(b);
           remove.add (0, objetos.indexOf(b));
-        }
+         }
       }
     }
+    
     for (Integer i : remove) {
       objetos.remove(i.intValue());
     }
@@ -314,8 +315,21 @@ void draw() {
     //  
     for (int i = 0; i < pairs.size (); i++) {  
       Mandala p = pairs.get(i);
-      p.display();
+      if(p.tempoVida()){
+        p.fixa.killBody();        
+      }
+      if(box2d.getBodyPixelCoord(p.movel.body).y > 1000){
+        remove.add(0,new Integer(i));
+      }
+      //print(box2d.getBodyPixelCoord(p.movel.body).y);     
+      //p.display();
     }
+    
+    for (Integer i : remove) {
+      pairs.remove(i.intValue());
+    }
+    remove.clear();
+    
     for (Objeto o : objetos) {
       o.processa();
       //println(objetos.size());
@@ -474,6 +488,7 @@ void draw() {
       dentesDeLeao[i].rendPoem();
     }
     
+    print(pairs.size());
     //if (mousePressed) {
 
     // objetos.add(new Circulo(nextId, mouseX, mouseY, 25));
@@ -548,13 +563,13 @@ void onTap(float x, float y)
 
         if (dist < 2*r) lugarOcupado = true;
       }
-      if (!lugarOcupado) {
-        remove.add(0,objetos.indexOf(qualBolha));
+      if (!lugarOcupado) {                
         Mandala p = new Mandala(x, y, max(40, y));
         pairs.add(p);
-      }
+      }      
     }
-  }
+    qualBolha.die = true;  
+  }   
 }
 
 void onDoubleTap(float x, float y) {
@@ -588,7 +603,7 @@ void onFlick( float x, float y, float px, float py, float v)
 
 
 void connect() {
-  _client = new JSONTCPClient("150.164.112.70", 8765);       
+  _client = new JSONTCPClient("150.164.112.71", 8765);       
 
   if (_client.isConnected()) {
     print("connected");

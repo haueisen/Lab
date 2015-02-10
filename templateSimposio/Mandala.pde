@@ -1,12 +1,15 @@
 class Mandala {
 
-  Particle fixa;
+  public Particle fixa;
   Particle movel;
 
   float len;
   float x;
   float y;  
- 
+
+  float tempoVida;
+  float createTime; 
+  
   // Chain constructor
   Mandala(float x, float y, float l) {
     this.x = x;
@@ -14,10 +17,13 @@ class Mandala {
     //len = 100;
     len = l;
 
+    tempoVida = random(10,30) * 1000;
+    createTime = millis();
     
     fixa = new Particle(x,0,true);
     movel = new Particle(x+50*random(-1,1),y,false);
     movel.body.setLinearDamping(0.2);
+    movel.body.setFixedRotation(true);
 
     DistanceJointDef djd = new DistanceJointDef();
     // Connection between previous particle and this one
@@ -35,17 +41,22 @@ class Mandala {
     DistanceJoint dj = (DistanceJoint) box2d.world.createJoint(djd);
   }
 
-
+boolean tempoVida(){
+    //float vida;
+    //vida = random(5, 40); 
+    return ((millis() - createTime)  > tempoVida);
+  }
 
   // Draw the bridge
   void display() {
-    Vec2 pos1 = box2d.getBodyPixelCoord(fixa.body);
-    Vec2 pos2 = box2d.getBodyPixelCoord(movel.body);
-    strokeWeight(3);
-    stroke(100,150,100);
-    noFill();
-    bezier(x, -100, pos1.x, pos1.y, pos2.x-(pos2.x-pos1.x)/2, pos2.y, pos2.x, pos2.y);
-
+    if(!tempoVida()){
+      Vec2 pos1 = box2d.getBodyPixelCoord(fixa.body);    
+      Vec2 pos2 = box2d.getBodyPixelCoord(movel.body);
+      strokeWeight(3);
+      stroke(100,150,100);
+      noFill();    
+      bezier(x, -100, pos1.x, pos1.y, pos2.x-(pos2.x-pos1.x)/2, pos2.y, pos2.x, pos2.y);
+    }
   //  fixa.display();
     movel.display();
   }

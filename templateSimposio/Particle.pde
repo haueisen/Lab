@@ -1,7 +1,4 @@
-
-
 // A circular particle
-
 class Particle {
 
   // We need to keep track of a Body and a radius
@@ -11,10 +8,10 @@ class Particle {
   color col;
   int img = 0;
 
-  boolean locked;
+  public boolean locked;
   Particle(float x, float y, boolean lock) {
 
-    r = 40;
+    r = 54;
     if (lock) {
       r = 1;
     } else {
