@@ -1,0 +1,21 @@
+1. rogério: 
+- ao clicar em uma palavra, mandar nova lista de palavras pra todos os tablets
+- diminuir velocidade da animação (gif)
+- testar sons (trilha tb)
+
+2. álvaro
+- ao clicar em uma palavra, mandar mudar todas em todos os tablets
+- testar sons (trilha tb)
+
+3. carlos
+ - testar sons (trilha tb)
+
+4. alckmar
+- testar frases que estão sendo faladas no último tablet
+- testar vários sons ao mesmo tempo
+
+5. pablo
+-  ao trocar de poema (toque), mandar nova lista de poemas pra todos os tablets
+ - testar sons (trilha tb)
+
+controle remoto: testar comandos em todas as instalações
