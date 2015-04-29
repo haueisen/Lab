@@ -10,10 +10,10 @@ public class Bolha extends Objeto {
     this.vx = _vx;
     this.vy = _vy;
     this.radius = raio;    
-    gravidade= -0.002;
+    gravidade= -0.0005;
     qualImagem = _qualImagem;
     hue = _hue;
-    tempoVida = random(5, 20) * 1000;
+    tempoVida = random(10, 30) * 1000;
     createTime = millis();
     die = false;
   }

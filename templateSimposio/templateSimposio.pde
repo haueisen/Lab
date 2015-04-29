@@ -41,7 +41,7 @@ ArrayList<Integer> remove;
 int nextId;
 
 Vagalume vagalume;
-Abelha abelha;
+//Abelha abelha;
 
 float accelX = 0;
 float accelY = 0;
@@ -78,6 +78,7 @@ int NUMFLOWERS = 4;     //Max number of flowers
 PImage[] poemA, poemB, poemC, poemD, poemE, poemF; //Array of Images, poems are array of sentences of images
 Dandelion[] dentesDeLeao;
 
+APMediaPlayer somMandala[];
 
 void setup() {
   sync = true;
@@ -172,7 +173,8 @@ void setup() {
   }
 
   loadPoemImages();  
-  
+  loadSounds();
+
   //frameRate(24);
 }
 
@@ -322,7 +324,7 @@ void draw() {
         remove.add(0,new Integer(i));
       }
       //print(box2d.getBodyPixelCoord(p.movel.body).y);     
-      //p.display();
+      p.display();
     }
     
     for (Integer i : remove) {
@@ -394,11 +396,24 @@ void draw() {
     if (id == 0) {
       catavento.desenhaCatavento();
     }
+    boolean canPoem = true;
+    for (int j=0; j<dentesDeLeao.length; j++){
+      if (dentesDeLeao[j].poeming){
+        canPoem = false;
+        break;
+      }
+    }
+    for (int j=0; j<dentesDeLeao.length; j++){
+        dentesDeLeao[j].shaking = !canPoem;            
+    }
+    
     for (int i=0; i<dentesDeLeao.length; i++) {
       if (dentesDeLeao[i].isAlive()) {
         dentesDeLeao[i].rendFlower();
-        if (!dentesDeLeao[i].isGrowing()) {
-          dentesDeLeao[i].isColliding(mouseX, mouseY);
+        if (!dentesDeLeao[i].isGrowing()) { 
+          if(canPoem){            
+            dentesDeLeao[i].isColliding(mouseX, mouseY);          
+          }         
         }
       }
     }
@@ -421,13 +436,13 @@ void draw() {
         if (r.obj == "Bolha") {
           //print("bolha");
           j.setString("Objeto", "Bolha");
-          if (r.y > sizeY/2) {
-            j.setInt("para", ((id - 1)+2) % 2);
+          if (r.x > sizeX/2) {
+            j.setInt("para", ((id - 1)+4) % 4);
             //j.setInt("para", id);
-          } else {
-            j.setInt("para", (id + 1) % 2);
-            //j.setInt("para", id);
-          }
+         }// else {
+//            j.setInt("para", (id + 1) % 4);
+//            //j.setInt("para", id);
+//          }
           j.setInt("ID", r.id);
           j.setFloat("x", r.x);
           j.setFloat("y", r.y);
@@ -438,27 +453,28 @@ void draw() {
           j.setInt("img", r.qualImagem);
         } else if (r.obj == "Vagalume") {
           j.setString("Objeto", "Vagalume");
-          if (r.y > sizeY/2) {
-            j.setInt("para", ((id - 1)+2) % 2);
+          if (r.x > sizeX/2) {
+            j.setInt("para", ((id - 1)+4) % 4);
             //j.setInt("para", id);
           } else {
-            j.setInt("para", (id + 1) % 2);
+            j.setInt("para", (id + 1) % 4);
             //j.setInt("para", id);
           }
           j.setInt("ID", r.id);
           j.setFloat("x", r.x);          
           j.setFloat("y", r.y);
-          j.setFloat("vx", r.vx);
+          j.setFloat("vx", r.vx*1.5);
           j.setFloat("vy", r.vy);
           if (vagalume != null)j.setBoolean("ligado", vagalume.ligado);          
           j.setFloat("raio", r.radius);
+         // print(j);
         } else if (r.obj == "Abelha") {
           j.setString("Objeto", "Abelha");
-          if (r.y > sizeY/2) {
-            j.setInt("para", ((id - 1)+2) % 2);
+          if (r.x > sizeX/2) {
+            j.setInt("para", ((id - 1)+4) % 4);
             //j.setInt("para", id);
           } else {
-            j.setInt("para", (id + 1) % 2);
+            j.setInt("para", (id + 1) % 4);
             //j.setInt("para", id);
           }
           j.setInt("ID", r.id);
@@ -484,11 +500,13 @@ void draw() {
 
     remove.clear();
     
-     for (int i=0; i<dentesDeLeao.length; i++) {
-      dentesDeLeao[i].rendPoem();
+    for (int i=0; i<dentesDeLeao.length; i++) {
+      if(dentesDeLeao[i].poeming){
+        dentesDeLeao[i].rendPoem();
+      }
     }
     
-    print(pairs.size());
+   // print(pairs.size());
     //if (mousePressed) {
 
     // objetos.add(new Circulo(nextId, mouseX, mouseY, 25));
@@ -537,8 +555,8 @@ void onTap(float x, float y)
    if (mouseY>2*height/3)
   {
     for (int i=0; i<dentesDeLeao.length; i++) {
-      if (!dentesDeLeao[i].isAlive()) {
-        dentesDeLeao[i].born(height, width, 124, 30, NUM);
+      if (dentesDeLeao[i].isDead()) {
+        dentesDeLeao[i].born(height, width, 124, 24, NUM);
       }
     }
   }
@@ -603,7 +621,7 @@ void onFlick( float x, float y, float px, float py, float v)
 
 
 void connect() {
-  _client = new JSONTCPClient("150.164.112.71", 8765);       
+  _client = new JSONTCPClient("150.164.119.52", 8765);       
 
   if (_client.isConnected()) {
     print("connected");
@@ -621,10 +639,10 @@ void connect() {
       vagalume = new Vagalume(0, 50);      
       objetos.add(vagalume);
       
-      abelha = new Abelha(1001,-100,(height/2),10,0,50);
-      abelha.replicado = true;
-      abelha.recebido = true;
-      objetos.add(abelha);      
+     // abelha = new Abelha(1001,-100,(height/2),10,0,50);
+    //  abelha.replicado = true;
+    //  abelha.recebido = true;
+    //  objetos.add(abelha);      
      // println(objetos.size());
     }
   } else {
@@ -730,6 +748,7 @@ void processMessage(JSONObject msg) {
       Vagalume v = new Vagalume(ID, x, y, vx, vy, r);
       v.ligado = l; 
       objetos.add(v);
+      //println(msg);
     } else if (objeto.equals("Abelha")) {
       int ID = msg.getInt("ID");
       float x = msg.getFloat("x");
@@ -738,8 +757,8 @@ void processMessage(JSONObject msg) {
       float vy = msg.getFloat("vy");
       float r = msg.getFloat("raio");
 
-      Abelha abe = new Abelha(ID, x, y, vx, vy, r);
-      objetos.add(abe);
+      //Abelha abe = new Abelha(ID, x, y, vx, vy, r);
+     // objetos.add(abe);
     }
     objetos.get(objetos.size()-1).recebido = true;
     objetos.get(objetos.size()-1).replicado = true;
@@ -757,13 +776,13 @@ void processMessage(JSONObject msg) {
     int altura = msg.getInt("altura");
     float alt = altura / 100.0;
    // println(msg);
-    Abelha abe = new Abelha(666, -100, displayHeight*alt, 10, 0, 50);
-    objetos.add(abe);
+   // Abelha abe = new Abelha(666, -100, displayHeight*alt, 10, 0, 50);
+   // objetos.add(abe);
 
-    objetos.get(objetos.size()-1).recebido = true;
-    objetos.get(objetos.size()-1).replicado = true;
+   // objetos.get(objetos.size()-1).recebido = true;
+  //  objetos.get(objetos.size()-1).replicado = true;
   } else if (ac.equals("erro")) {
-    println(msg);
+   // println(msg);
   }
 }
 
@@ -802,8 +821,8 @@ void beginContact(Contact cp) {
   if (o1.getClass() == Particle.class && o2.getClass() == Particle.class) {
     Particle p1 = (Particle) o1;
     p1.beginCol();
-    Particle p2 = (Particle) o2;
-    p2.beginCol();
+   // Particle p2 = (Particle) o2;
+   // p2.beginCol();
   }
 }
 
@@ -824,8 +843,8 @@ void endContact(Contact cp) {
   if (o1.getClass() == Particle.class && o2.getClass() == Particle.class) {
     Particle p1 = (Particle) o1;
     p1.endCol();
-    Particle p2 = (Particle) o2;
-    p2.endCol();
+    //Particle p2 = (Particle) o2;
+    //p2.endCol();
   }
 }
 
@@ -958,6 +977,30 @@ void loadPoemImages() {
   this.poemF[8] = loadImage("pausa.png");
 }
 
+
+void loadSounds(){
+
+  somMandala = new APMediaPlayer[9];
+  for(int i = 0; i < 9; i++){
+    somMandala[i] = new APMediaPlayer(this); //create new APMediaPlayer
+    somMandala[i].setMediaFile("percurssao Mandala "+(i+1)+".mp3"); //set the file (files are in data folder)  
+    somMandala[i].setLooping(false); //restart playback end reached
+    somMandala[i].setVolume(.2f, .2f); //Set left and right volumes. Range is from 0.0 to 1.0
+  }
+}
+
+@Override
+public void onDestroy() {
+
+  super.onDestroy(); //call onDestroy on super class
+  for(int i = 0; i < 9; i++){
+    if(somMandala[i] !=null) { //must be checked because or else crash when return from landscape mode
+      somMandala[i].release(); //release the player
+    }
+  }
+}
+
+
 //void keyPressed() {
 //
 //  if (key == CODED) {
@@ -970,4 +1013,3 @@ void loadPoemImages() {
 //    }
 //  }
 //}
-

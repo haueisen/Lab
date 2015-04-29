@@ -9,11 +9,12 @@ class Dandelion {
 
   // Private properties
   private float xpos, ypos, angle, jitter, transitions; 
-  private boolean alive, dying, growing;
+  private boolean alive, dead, dying, growing,poeming,shaking;
   private PImage myStalk, myTop;
   private PImage[] stalk, top;
   private int raffle, myStalkH, myStalkW, myTopH, myTopW, stageH, stageW, localFramerate, topAjust, collisionRadio, chosenPoem;
 
+  private Poema poema;
   private Frase[] frases;
   private int verseNumber=10;
 
@@ -22,14 +23,24 @@ class Dandelion {
   public boolean poemChosed;
   public float myTopXCenter, myTopYCenter;
 
+  
+  //--
+  float shakeRot = 0;
+  float maxRot = 1;
+  int sentido = 1;
+  float minInc = .01;
+  float inc = .1;
+
   // Constructor 
   Dandelion() {  
 
     //Ajust top and stalk
     this.topAjust = 5;
-
+    this.dead = true;
+    this.poeming = false;
+    this.shaking = false;
     // Collision Radio value em pixels
-    this.collisionRadio = 60; 
+    this.collisionRadio = 30; 
 
     frases = new Frase[40];
     for (int i = 0; i<40; i++)
@@ -61,8 +72,11 @@ class Dandelion {
     //Redefine Flower
     this.alive = true; 
     this.dying = false;
+    this.dead = false;
     this.growing = true;
+    this.poeming = false;
     this.poemChosed = false;
+    this.shaking = false;
 
     //Choose stalk
     this.myStalk = this.stalk[raffle];
@@ -88,6 +102,10 @@ class Dandelion {
   boolean isAlive() {
     return this.alive;
   }
+  
+  boolean isDead(){
+    return this.dead;
+  }
 
   boolean isGrowing() {
     return this.growing;
@@ -103,80 +121,47 @@ class Dandelion {
       // ellipse(this.xpos+this.myTopW/2, this.ypos+this.myTopH/this.topAjust, this.collisionRadio, this.collisionRadio); // Uncomment to debug collisionRadio
       if (!dying)
       {
-        chosenPoem = (int)floor(random(0, 5));
+        //chosenPoem = (int)floor(random(0, 5));
+        chosenPoem = (int)floor(random(0, 4));
+        float ka = 0.0025; //acceleration constant multiplier
+        float kv = 0.03;
         if (chosenPoem == 0)
         {
-          for (int i = 0; i<poemA.length; i++)
-          {
-            verseNumber = poemA.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemA[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemA.length-i)));
-          }
+            poema = new Poema(poemA,xpos+myTop.width/2, ypos+myTop.height/2);
         } else if (chosenPoem == 1)
         {
-          verseNumber = poemB.length;
-          for (int i = 0; i<poemB.length; i++)
-          {
-            verseNumber = poemB.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemB[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemB.length-i)));
-          }
+           poema = new Poema(poemB,xpos+myTop.width/2, ypos+myTop.height/2);
         } else if (chosenPoem == 2)
         {
-          verseNumber = poemC.length;
-          for (int i = 0; i<poemC.length; i++)
-          {
-            verseNumber = poemC.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemC[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemC.length-i)));
-          }
+           poema = new Poema(poemC,xpos+myTop.width/2, ypos+myTop.height/2);
         } else if (chosenPoem == 3)
         {
-
-          verseNumber = poemD.length;
-          for (int i = 0; i<poemD.length; i++)
-          {
-            verseNumber = poemD.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemD[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemD.length-i)));
-          }
+           poema = new Poema(poemD,xpos+myTop.width/2, ypos+myTop.height/2);
         } else if (chosenPoem == 4)
         {
-          verseNumber = poemE.length;
-          for (int i = 0; i<poemE.length; i++)
-          {
-            verseNumber = poemE.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemE[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemE.length-i)));
-          }
-        } else if (chosenPoem == 5)
-        {
-          verseNumber = poemF.length;
-          for (int i = 0; i<poemF.length; i++)
-          {
-            verseNumber = poemF.length;
-            frases[i] = new Frase();
-            frases[i].setMyImage(poemF[i]);
-            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
-            frases[i].acc = new PVector(0, 0.01+(0.001*(poemF.length-i)));
-          }
+           poema = new Poema(poemE,xpos+myTop.width/2, ypos+myTop.height/2);
         }
+//        } else if (chosenPoem == 5)
+//        {
+//          verseNumber = poemF.length;
+//          for (int i = 0; i<poemF.length; i++)
+//          {
+//            verseNumber = poemF.length;
+//            frases[i] = new Frase();
+//            frases[i].setMyImage(poemF[i]);
+//            frases[i].inicialPosition(xpos+myTop.width/2, ypos+myTop.height/2);
+//            frases[i].acc = new PVector(0, 0.01+(0.001*(poemF.length-i)));
+//          }
+//        }
+
+        
       }
 
 
-      this.dying = true;
+      this.poeming = true;
       return true;
     } else {
+      
       return false;
     }
   }
@@ -188,11 +173,9 @@ class Dandelion {
 
   void rendPoem()
   {
-    for (int i = 0; i<frases.length; i++)
-    {
-      if (frases[i].pos.y<=height-30)
-        frases[i].update();
-    }
+    poema.update();
+    this.dead = poema.dead;
+    this.dying = poema.dying;
   }
 
   void rendFlower() {
@@ -202,7 +185,7 @@ class Dandelion {
     int pTH = int(this.myTopH/this.localFramerate);  // top proportion Height 
     int pTW = int(this.myTopW/this.localFramerate);  // top proportion Width 
     int pAlpha = int(255/this.localFramerate);  // alpha proportion 
-
+    
     //Check state
     if (this.growing) { 
       if (this.transitions > 0) {
@@ -219,6 +202,7 @@ class Dandelion {
     } else {
         die();
     }
+    
   }
 
   //PRIVATE METHODS
@@ -226,6 +210,7 @@ class Dandelion {
   private void die() {
     this.alive = false;
     this.poemChosed = false;
+    this.poeming = false;
   }
 
   private void choosePoem(int a) {
@@ -233,8 +218,10 @@ class Dandelion {
     this.chosenPoem = int(random(0, a)); // Random choose one of the poems
   }
 
-  private void shakeTop() {
+  private void shakeTop() {            
+
     image(this.myStalk, this.xpos, this.ypos);
+    
     int topXCenter = int(this.xpos+this.myTopW/2);
     int topYCenter = int(this.ypos+this.myTopH/this.topAjust);
     if (second() % 1 == 0) {  
@@ -246,8 +233,12 @@ class Dandelion {
     translate(topXCenter, topYCenter);
     rotate(c);
     translate(-this.myTopW/2, -this.myTopH/2);
-    image(this.myTop, 0, 0);
+    if(!this.shaking){
+      image(this.myTop, 0, 0);
+    }
     popMatrix();
+//    }
+  
   }
 
   private void loadImages() {

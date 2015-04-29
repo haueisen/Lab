@@ -142,11 +142,23 @@ class Particle {
   }
 
   void beginCol() {
-    col = color(255, 0, 0);
+    //col = color(255, 0, 0);
+    //println("1 2 3...");
+    int start = int(random(0,9));
+    int end = (start - 1) % 9;
+    
+    for(int i = start; i != end ; i = (i+1) % 9){
+      if(somMandala[i] != null && ((somMandala[i].getCurrentPosition() == somMandala[i].getDuration()) ||(somMandala[i].getCurrentPosition() == 0))){
+        somMandala[i].seekTo(0);
+        somMandala[i].start();
+        break;
+      }
+    }
   }
 
   void endCol() {
-    col = color(175);
+    //col = color(175);
+    //println("Som... Som...");
   }
 }
 
